@@ -1,0 +1,21 @@
+# Home Assistant secrets and tokens
+.ha_secrets
+*.token
+
+# ESPHome secrets (contains WiFi passwords, API keys, etc.)
+secrets.yaml
+
+# Python cache
+__pycache__/
+*.pyc
+
+# Editor files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS files
+.DS_Store
+Thumbs.db

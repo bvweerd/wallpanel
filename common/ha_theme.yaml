@@ -1,0 +1,105 @@
+# Home Assistant Dark Theme Colors for LVGL
+# Based on Home Assistant's official dark theme
+# https://www.home-assistant.io/
+
+# Color definitions matching Home Assistant dark theme
+# Use ESPHome's color component syntax
+color:
+  # Background colors
+  - id: ha_bg_primary
+    red: 4%
+    green: 7%
+    blue: 13%
+    # hex: 0x0B1220 - Main background (very dark slate)
+
+  - id: ha_bg_card
+    red: 12%
+    green: 16%
+    blue: 20%
+    # hex: 0x1F2933 - Card/tile background (dark grey/blue)
+
+  - id: ha_bg_card_hover
+    red: 16%
+    green: 22%
+    blue: 28%
+    # hex: 0x2A3947 - Card hover state (lighter)
+
+  - id: ha_bg_card_pressed
+    red: 21%
+    green: 29%
+    blue: 37%
+    # hex: 0x364B5E - Card pressed state (even lighter)
+
+  # Primary colors
+  - id: ha_primary
+    red: 1%
+    green: 66%
+    blue: 96%
+    # hex: 0x03A9F4 - Primary blue (Home Assistant blue)
+
+  - id: ha_primary_dark
+    red: 1%
+    green: 53%
+    blue: 82%
+    # hex: 0x0288D1 - Darker blue for pressed states
+
+  # Text colors
+  - id: ha_text_primary
+    red: 100%
+    green: 100%
+    blue: 100%
+    # hex: 0xFFFFFF - Primary text (white)
+
+  - id: ha_text_secondary
+    red: 70%
+    green: 75%
+    blue: 78%
+    # hex: 0xB3BEC6 - Secondary text (light grey)
+
+  - id: ha_text_disabled
+    red: 37%
+    green: 42%
+    blue: 46%
+    # hex: 0x5F6B75 - Disabled text (darker grey)
+
+  # State colors
+  - id: ha_state_on
+    red: 30%
+    green: 69%
+    blue: 31%
+    # hex: 0x4CAF50 - Green for "on" state
+
+  - id: ha_state_off
+    red: 37%
+    green: 42%
+    blue: 46%
+    # hex: 0x5F6B75 - Grey for "off" state
+
+  - id: ha_state_unavailable
+    red: 74%
+    green: 74%
+    blue: 74%
+    # hex: 0xBDBDBD - Light grey for unavailable
+
+  # Accent colors
+  - id: ha_accent
+    red: 100%
+    green: 60%
+    blue: 0%
+    # hex: 0xFF9800 - Orange accent
+
+  - id: ha_warning
+    red: 100%
+    green: 34%
+    blue: 13%
+    # hex: 0xFF5722 - Red for warnings/errors
+
+  - id: ha_success
+    red: 30%
+    green: 69%
+    blue: 31%
+    # hex: 0x4CAF50 - Green for success
+
+# Note: LVGL styles and theme configuration must be defined in the main
+# wallpanel.yaml file within the lvgl: section. This file only provides
+# the color palette that can be referenced by ID throughout the config.

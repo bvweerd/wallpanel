@@ -1,0 +1,148 @@
+image:
+  - id: volume_mute
+    file: mdi:volume-variant-off
+    resize: 32x32
+    type: BINARY
+  - id: volume_notmute
+    file: mdi:volume-low
+    resize: 32x32
+    type: BINARY
+  - id: downlight
+    file: mdi:light-recessed
+    resize: 32x32
+    type: BINARY
+  - id: airco
+    file: mdi:air-conditioner
+    resize: 32x32
+    type: BINARY
+  - id: power_off
+    file: mdi:power-cycle
+    resize: 32x32
+    type: BINARY
+  - id: temp_target
+    file: mdi:thermometer
+    resize: 32x32
+    type: BINARY
+  - id: temp_current
+    file: mdi:bullseye
+    resize: 32x32
+    type: BINARY
+  - id: info
+    file: mdi:information
+    resize: 32x32
+    type: BINARY
+  - id: zone
+    file: mdi:air-filter
+    resize: 32x32
+    type: BINARY
+  - id: audio_menu
+    file: mdi:knob
+    resize: 32x32
+    type: BINARY
+  - id: tv_menu
+    file: mdi:television
+    resize: 32x32
+    type: BINARY
+  - id: alarm_menu
+    file: mdi:alarm-light
+    resize: 32x32
+    type: BINARY
+  - id: settings_menu
+    file: mdi:cog
+    resize: 32x32
+    type: BINARY
+  - id: blind
+    file: mdi:roller-shade
+    resize: 32x32
+    type: BINARY
+  - id: thermometer_hot
+    file: mdi:thermometer-chevron-up
+    resize: 24x24
+    type: BINARY
+  - id: thermometer_cold
+    file: mdi:thermometer-chevron-down
+    resize: 24x24
+    type: BINARY
+  - id: radio10_logo
+    file: images/radio10.png
+    resize: 64x64
+    type: RGB565
+    byte_order: little_endian
+  - id: qmusic_logo
+    file: images/qmusic.png
+    resize: 64x64
+    type: RGB565
+    byte_order: little_endian
+  - id: skyradio_logo
+    file: images/skyradio.png
+    resize: 64x64
+    type: RGB565
+    byte_order: little_endian
+  - id: vacuum_icon
+    file: mdi:vacuum
+    resize: 24x24
+    type: BINARY
+  - id: arrow_left_icon
+    file: mdi:arrow-left
+    resize: 24x24
+    type: BINARY
+  - id: home_icon
+    file: mdi:home-floor-0
+    resize: 24x24
+    type: BINARY
+  - id: silverware_icon
+    file: mdi:silverware-fork-knife
+    resize: 24x24
+    type: BINARY
+  - id: sofa_icon
+    file: mdi:sofa
+    resize: 24x24
+    type: BINARY
+  - id: coat_rack_icon
+    file: mdi:coat-rack
+    resize: 24x24
+    type: BINARY
+  - id: door_icon
+    file: mdi:door-open
+    resize: 24x24
+    type: BINARY
+  - id: water_icon
+    file: mdi:water-circle
+    resize: 24x24
+    type: BINARY
+  - id: home_floor_1_icon
+    file: mdi:home-floor-1
+    resize: 24x24
+    type: BINARY
+  - id: awning_icon
+    file: mdi:awning-outline
+    resize: 24x24
+    type: BINARY
+  - id: blinds_icon
+    file: mdi:blinds
+    resize: 24x24
+    type: BINARY
+  - id: sun_icon
+    file: mdi:white-balance-sunny
+    resize: 24x24
+    type: BINARY
+  - id: floor_lamp_icon
+    file: mdi:floor-lamp
+    resize: 24x24
+    type: BINARY
+  - id: chevron_down_icon
+    file: mdi:chevron-down
+    resize: 20x20
+    type: BINARY
+  - id: chevron_up_icon
+    file: mdi:chevron-up
+    resize: 20x20
+    type: BINARY
+  - id: stop_icon
+    file: mdi:stop
+    resize: 20x20
+    type: BINARY
+  - id: laptop_icon
+    file: mdi:laptop
+    resize: 24x24
+    type: BINARY

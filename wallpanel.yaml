@@ -1,0 +1,2419 @@
+substitutions:
+  device_name: "wallpanel"
+  friendly_name: "Wallpanel"
+  comment: "ESP32-P4"
+  api_password: !secret api_password
+  ota_password: !secret ota_password
+
+esphome:
+  name: ${device_name}
+  comment: ${comment}
+  friendly_name: ${friendly_name}
+  platformio_options:
+    build_flags: "-DBOARD_HAS_PSRAM"
+    board_build.esp-idf.memory_type: qio_opi
+    board_build.flash_mode: dio
+    board_upload.maximum_ram_size: 524288
+    board_build.flash_size: 16MB
+  on_boot:
+    - priority: -100
+      then:
+        - light.turn_on: backlight
+
+api:
+  encryption:
+    key: ${api_password}
+
+ota:
+  - platform: esphome
+    id: my_ota
+    password: ${ota_password}
+
+wifi:
+#  networks:
+  ssid: !secret wifi_ssid
+  password: !secret wifi_password
+
+  ap:
+    ssid: ${device_name}
+    password: ${wifi_password}
+
+esp32:
+  board: esp32-p4-evboard
+  cpu_frequency: 400MHz
+  flash_size: 16MB
+  framework:
+    type: esp-idf
+    advanced:
+      enable_idf_experimental_features: yes
+
+<<: !include common/images.yaml
+<<: !include common/ha_theme.yaml
+
+logger:
+  hardware_uart: USB_SERIAL_JTAG
+
+# Not Needed?                                          
+#external_components:  
+#  - source: github://esphome/esphome@2025.7.1
+#    components: [i2c]
+
+esp32_hosted:
+  variant: esp32c6
+  active_high: true
+  reset_pin: 54
+  cmd_pin: 19
+  clk_pin: 18
+  d0_pin: 14
+  d1_pin: 15
+  d2_pin: 16
+  d3_pin: 17
+  slot: 1
+
+psram:
+  speed: 200MHz
+
+# Required for online_image component
+http_request:
+
+# Buienradar image from converted PNG
+online_image:
+  - url: http://192.168.2.2:8123/local/esphomefiles/buienradar_frame_1.png
+    id: buienradar_frame_1
+    type: RGB565
+    byte_order: little_endian
+    format: PNG
+    resize: 314x220
+    update_interval: 2min  # Sync met HA updates (elke 5 min)
+  - url: http://192.168.2.2:8123/local/esphomefiles/buienradar_frame_2.png
+    id: buienradar_frame_2
+    type: RGB565
+    byte_order: little_endian
+    format: PNG
+    resize: 314x220
+    update_interval: 2min  # Sync met HA updates (elke 5 min)
+  - url: http://192.168.2.2:8123/local/esphomefiles/buienradar_frame_3.png
+    id: buienradar_frame_3
+    type: RGB565
+    byte_order: little_endian
+    format: PNG
+    resize: 314x220
+    update_interval: 2min  # Sync met HA updates (elke 5 min)
+  - url: http://192.168.2.2:8123/local/esphomefiles/buienradar_frame_4.png
+    id: buienradar_frame_4
+    type: RGB565
+    byte_order: little_endian
+    format: PNG
+    resize: 314x220
+    update_interval: 2min  # Sync met HA updates (elke 5 min)
+  - url: http://192.168.2.2:8123/local/esphomefiles/buienradar_frame_5.png
+    id: buienradar_frame_5
+    type: RGB565
+    byte_order: little_endian
+    format: PNG
+    resize: 314x220
+    update_interval: 2min  # Sync met HA updates (elke 5 min)
+  - url: http://192.168.2.2:8123/local/esphomefiles/buienradar_frame_6.png
+    id: buienradar_frame_6
+    type: RGB565
+    byte_order: little_endian
+    format: PNG
+    resize: 314x220
+    update_interval: 2min  # Sync met HA updates (elke 5 min)
+  - url: http://192.168.2.2:8123/local/esphomefiles/buienradar_frame_7.png
+    id: buienradar_frame_7
+    type: RGB565
+    byte_order: little_endian
+    format: PNG
+    resize: 314x220
+    update_interval: 2min  # Sync met HA updates (elke 5 min)
+  - url: http://192.168.2.2:8123/local/esphomefiles/buienradar_frame_8.png
+    id: buienradar_frame_8
+    type: RGB565
+    byte_order: little_endian
+    format: PNG
+    resize: 314x220
+    update_interval: 2min  # Sync met HA updates (elke 5 min)
+  - url: http://192.168.2.2:8123/local/esphomefiles/buienradar_frame_9.png
+    id: buienradar_frame_9
+    type: RGB565
+    byte_order: little_endian
+    format: PNG
+    resize: 314x220
+    update_interval: 2min  # Sync met HA updates (elke 5 min)
+  - url: http://192.168.2.2:8123/local/esphomefiles/buienradar_frame_10.png
+    id: buienradar_frame_10
+    type: RGB565
+    byte_order: little_endian
+    format: PNG
+    resize: 314x220
+    update_interval: 2min  # Sync met HA updates (elke 5 min)
+  - url: http://192.168.2.2:8123/local/esphomefiles/energieprijzen.png
+    id: energieprijzen_image
+    type: RGB565
+    byte_order: little_endian
+    format: PNG
+    resize: 648x50
+    update_interval: 5min
+    on_download_finished:
+      - logger.log: "Energy price chart downloaded, updating widget"
+      - lvgl.image.update:
+          id: energieprijzen_widget
+          src: energieprijzen_image
+      - lvgl.widget.redraw:
+          id: energieprijzen_widget
+  - url: http://192.168.2.2:8123/local/esphomefiles/agenda.png
+    id: agenda_image
+    type: RGB565
+    byte_order: little_endian
+    format: PNG
+    resize: 314x220
+    update_interval: 5min
+    on_download_finished:
+      - logger.log: "Agenda image downloaded, updating widget"
+      - lvgl.image.update:
+          id: agenda_widget
+          src: agenda_image
+      - lvgl.widget.redraw:
+          id: agenda_widget
+  - url: http://192.168.2.2:8123/local/esphomefiles/camera1.png
+    id: camera1_image
+    type: RGB565
+    byte_order: little_endian
+    format: PNG
+    resize: 314x220
+    update_interval: 10s
+  - url: http://192.168.2.2:8123/local/esphomefiles/camera2.png
+    id: camera2_image
+    type: RGB565
+    byte_order: little_endian
+    format: PNG
+    resize: 314x220
+    update_interval: 10s
+
+time:
+  - platform: homeassistant
+    id: ha_time
+    on_time:
+      - seconds: 0
+        then:
+          - lvgl.label.update:
+              id: header_datetime
+              text: !lambda |-
+                static const char* dagen[] = {"Zondag", "Maandag", "Dinsdag", "Woensdag", "Donderdag", "Vrijdag", "Zaterdag"};
+                static const char* maanden[] = {"", "jan", "feb", "mrt", "apr", "mei", "jun", "jul", "aug", "sep", "okt", "nov", "dec"};
+                auto time = id(ha_time).now();
+                static char buf[100];
+                sprintf(buf, "%s %d %s %04d - %02d:%02d",
+                  dagen[time.day_of_week - 1],
+                  time.day_of_month,
+                  maanden[time.month],
+                  time.year,
+                  time.hour,
+                  time.minute);
+                return buf;
+
+globals:
+  - id: buienradar_current_frame
+    type: int
+    restore_value: no
+    initial_value: '1'
+  - id: camera_current
+    type: int
+    restore_value: no
+    initial_value: '1'
+  - id: consumption_start
+    type: float
+    restore_value: yes
+    initial_value: '0.0'
+  - id: production_start
+    type: float
+    restore_value: yes
+    initial_value: '0.0'
+
+interval:
+  - interval: 60s
+    then:
+      - lvgl.label.update:
+          id: header_datetime
+          text: !lambda |-
+            static const char* dagen[] = {"Zondag", "Maandag", "Dinsdag", "Woensdag", "Donderdag", "Vrijdag", "Zaterdag"};
+            static const char* maanden[] = {"", "jan", "feb", "mrt", "apr", "mei", "jun", "jul", "aug", "sep", "okt", "nov", "dec"};
+            auto time = id(ha_time).now();
+            static char buf[100];
+            sprintf(buf, "%s %d %s %04d - %02d:%02d",
+              dagen[time.day_of_week - 1],
+              time.day_of_month,
+              maanden[time.month],
+              time.year,
+              time.hour,
+              time.minute);
+            return buf;
+  - interval: 500ms
+    then:
+      - lambda: |-
+          // Cycle through buienradar animation frames (1-10)
+          int frame = id(buienradar_current_frame);
+
+          // Increment frame, loop back to 1 after 10
+          frame++;
+          if (frame > 10) {
+            frame = 1;
+          }
+          id(buienradar_current_frame) = frame;
+      - if:
+          condition:
+            lambda: 'return id(buienradar_current_frame) == 1;'
+          then:
+            - lvgl.image.update:
+                id: buienradar_widget
+                src: buienradar_frame_1
+      - if:
+          condition:
+            lambda: 'return id(buienradar_current_frame) == 2;'
+          then:
+            - lvgl.image.update:
+                id: buienradar_widget
+                src: buienradar_frame_2
+      - if:
+          condition:
+            lambda: 'return id(buienradar_current_frame) == 3;'
+          then:
+            - lvgl.image.update:
+                id: buienradar_widget
+                src: buienradar_frame_3
+      - if:
+          condition:
+            lambda: 'return id(buienradar_current_frame) == 4;'
+          then:
+            - lvgl.image.update:
+                id: buienradar_widget
+                src: buienradar_frame_4
+      - if:
+          condition:
+            lambda: 'return id(buienradar_current_frame) == 5;'
+          then:
+            - lvgl.image.update:
+                id: buienradar_widget
+                src: buienradar_frame_5
+      - if:
+          condition:
+            lambda: 'return id(buienradar_current_frame) == 6;'
+          then:
+            - lvgl.image.update:
+                id: buienradar_widget
+                src: buienradar_frame_6
+      - if:
+          condition:
+            lambda: 'return id(buienradar_current_frame) == 7;'
+          then:
+            - lvgl.image.update:
+                id: buienradar_widget
+                src: buienradar_frame_7
+      - if:
+          condition:
+            lambda: 'return id(buienradar_current_frame) == 8;'
+          then:
+            - lvgl.image.update:
+                id: buienradar_widget
+                src: buienradar_frame_8
+      - if:
+          condition:
+            lambda: 'return id(buienradar_current_frame) == 9;'
+          then:
+            - lvgl.image.update:
+                id: buienradar_widget
+                src: buienradar_frame_9
+      - if:
+          condition:
+            lambda: 'return id(buienradar_current_frame) == 10;'
+          then:
+            - lvgl.image.update:
+                id: buienradar_widget
+                src: buienradar_frame_10
+  - interval: 5s
+    then:
+      - lambda: |-
+          // Toggle between camera 1 and 2
+          int cam = id(camera_current);
+          cam = (cam == 1) ? 2 : 1;
+          id(camera_current) = cam;
+      - if:
+          condition:
+            lambda: 'return id(camera_current) == 1;'
+          then:
+            - lvgl.image.update:
+                id: camera_widget
+                src: camera1_image
+      - if:
+          condition:
+            lambda: 'return id(camera_current) == 2;'
+          then:
+            - lvgl.image.update:
+                id: camera_widget
+                src: camera2_image
+
+sensor:
+  - platform: homeassistant
+    id: indoor_temperature
+    entity_id: sensor.indoor_temperature
+    on_value:
+      then:
+        - lvgl.label.update:
+            id: indoor_temp_label
+            text: !lambda |-
+              char buf[10];
+              sprintf(buf, "%.1f°C", x);
+              return buf;
+
+  - platform: homeassistant
+    id: outdoor_temperature
+    entity_id: sensor.outdoor_temperature
+    on_value:
+      then:
+        - lvgl.label.update:
+            id: outdoor_temp_label
+            text: !lambda |-
+              char buf[10];
+              sprintf(buf, "%.1f°C", x);
+              return buf;
+
+  - platform: homeassistant
+    id: solar_radiation
+    entity_id: sensor.solar_radiation
+    on_value:
+      then:
+        - lvgl.label.update:
+            id: solar_radiation_label
+            text: !lambda |-
+              char buf[20];
+              sprintf(buf, "%.0f W/m2", x);
+              return buf;
+
+  # Energy meters - totals
+  - platform: homeassistant
+    id: energy_consumption_today
+    entity_id: sensor.energy_consumption_today
+    internal: true
+    on_value:
+      then:
+        - lvgl.label.update:
+            id: energy_consumption_label
+            text: !lambda |-
+              if (std::isnan(x)) x = 0.0f;
+              char buf[10];
+              sprintf(buf, "%.1fkWh", x);
+              return buf;
+ 
+  - platform: homeassistant
+    id: energy_production_today
+    entity_id: sensor.energy_production_today
+    internal: true    
+    on_value:
+      then:
+        - lvgl.label.update:
+            id: energy_production_label
+            text: !lambda |-
+              if (std::isnan(x)) x = 0.0f;
+              char buf[10];
+              sprintf(buf, "%.1fkWh", x);
+              return buf;
+
+  # Net energy (positive = producing more, negative = consuming more)
+  - platform: template
+    id: daily_net_energy
+    name: "Daily Net Energy"
+    unit_of_measurement: "kWh"
+    device_class: energy
+    accuracy_decimals: 3
+    lambda: |-
+      float consumption = id(energy_consumption_today).state;
+      float production = id(energy_production_today).state;
+      if (std::isnan(consumption)) consumption = 0.0f;
+      if (std::isnan(production)) production = 0.0f;
+      return production - consumption;
+    update_interval: 60s
+    on_value:
+      then:
+        - lvgl.label.update:
+            id: energy_net_label
+            text: !lambda |-
+              if (std::isnan(x) || std::isinf(x)) {
+                return std::string("0.0");
+              }
+              char buf[20];
+              sprintf(buf, "%+.1f", x);  // + shows sign always
+              return buf;
+        - lvgl.arc.update:
+            id: energy_meter
+            value: !lambda |-
+              // Map -10 to +10 kWh range to 0-100 for arc
+              // -10 kWh (verbruik) = 0% (links), 0 kWh (balans) = 50% (midden), +10 kWh (productie) = 100% (rechts)
+              if (std::isnan(x) || std::isinf(x)) {
+                return 50;
+              }
+              float val = x;
+              if (val < -10) val = -10;
+              if (val > 10) val = 10;
+              return (int)((val + 10) * 5);
+            indicator:
+              arc_color: !lambda |-
+                // Red for negative (consuming), green for positive (producing)
+                if (x < -0.5) {
+                  return lv_color_hex(0xFF3B30);  // Red
+                } else if (x > 0.5) {
+                  return lv_color_hex(0x34C759);  // Green
+                } else {
+                  return lv_color_hex(0x0A84FF);  // Blue for near-zero
+                }
+
+  - platform: homeassistant
+    id: zonnescherm_position
+    entity_id: cover.zonnescherm_met_positie
+    attribute: current_position
+    on_value:
+      then:
+        - lvgl.slider.update:
+            id: zonnescherm_slider
+            value: !lambda 'return x;'
+        - lvgl.label.update:
+            id: zonnescherm_status
+            text: !lambda |-
+              char buf[10];
+              sprintf(buf, "%.0f%%", x);
+              return buf;
+
+  - platform: homeassistant
+    id: screen_voor_position
+    entity_id: cover.screen_voor_met_positie
+    attribute: current_position
+    on_value:
+      then:
+        - lvgl.slider.update:
+            id: screen_voor_slider
+            value: !lambda 'return x;'
+        - lvgl.label.update:
+            id: screen_voor_status
+            text: !lambda |-
+              char buf[10];
+              sprintf(buf, "%.0f%%", x);
+              return buf;
+
+  - platform: homeassistant
+    id: screen_achter_position
+    entity_id: cover.screen_achter_met_positie
+    attribute: current_position
+    on_value:
+      then:
+        - lvgl.slider.update:
+            id: screen_achter_slider
+            value: !lambda 'return x;'
+        - lvgl.label.update:
+            id: screen_achter_status
+            text: !lambda |-
+              char buf[10];
+              sprintf(buf, "%.0f%%", x);
+              return buf;
+
+  - platform: homeassistant
+    id: screen_badkamer_position
+    entity_id: cover.screen_badkamer_met_positie
+    attribute: current_position
+    on_value:
+      then:
+        - lvgl.slider.update:
+            id: screen_badkamer_slider
+            value: !lambda 'return x;'
+        - lvgl.label.update:
+            id: screen_badkamer_status
+            text: !lambda |-
+              char buf[10];
+              sprintf(buf, "%.0f%%", x);
+              return buf;
+
+text_sensor:
+  - platform: homeassistant
+    id: thermostaat_mode
+    entity_id: input_select.thermostaat_mode
+    on_value:
+      then:
+        - lvgl.dropdown.update:
+            id: thermostat_dropdown
+            selected_text: !lambda return x.c_str();
+
+binary_sensor:
+  - platform: homeassistant
+    id: thuiswerken_status
+    entity_id: input_boolean.thuiswerken
+    on_state:
+      then:
+        - if:
+            condition:
+              binary_sensor.is_on: thuiswerken_status
+            then:
+              - lvgl.widget.update:
+                  id: shortcut_thuiswerken
+                  bg_color: 0x34C759
+            else:
+              - lvgl.widget.update:
+                  id: shortcut_thuiswerken
+                  bg_color: ha_bg_card
+
+  - platform: homeassistant
+    id: henry_waiting
+    entity_id: input_boolean.stofzuiger_wacht_op_input
+    on_state:
+      then:
+        - if:
+            condition:
+              binary_sensor.is_on: henry_waiting
+            then:
+              - light.turn_on: backlight
+              - lvgl.resume:
+              - lvgl.widget.show: henry_modal_overlay
+            else:
+              - lvgl.widget.hide: henry_modal_overlay
+
+number:
+  - platform: template
+    name: Screen Timeout
+    optimistic: true
+    id: display_timeout
+    unit_of_measurement: "s"
+    initial_value: 90
+    restore_value: true
+    min_value: 30
+    max_value: 180
+    step: 5
+    mode: box
+    on_value:
+      - lvgl.slider.update:
+          id: timeout_slider
+          value: !lambda return x;
+      - lvgl.label.update:
+          id: timeout_value_label
+          text: !lambda |-
+            char buf[16];
+            snprintf(buf, sizeof(buf), "%.0fs", x);
+            return buf;
+
+switch:
+  - platform: template
+    name: Screen Timeout Enabled
+    id: screen_timeout_enabled
+    optimistic: true
+    restore_mode: RESTORE_DEFAULT_ON
+    on_turn_on:
+      - lvgl.widget.update:
+          id: lvgl_screen_timeout_switch
+          state:
+            checked: true
+    on_turn_off:
+      - lvgl.widget.update:
+          id: lvgl_screen_timeout_switch
+          state:
+            checked: false
+
+button:
+  - platform: restart
+    id: restart_button
+    name: "Restart"
+
+# -------------------------------
+# Fonts
+# -------------------------------
+font:
+  - file: "gfonts://Roboto"
+    id: roboto_20
+    size: 20
+    glyphs: "!\"%()+=-,_.:°0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ abcdefghijklmnopqrstuvwxyz'/&@#?"
+  - file: "gfonts://Roboto"
+    id: roboto_16
+    size: 16
+    glyphs: "!\"%()+=-,_.:°0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ abcdefghijklmnopqrstuvwxyz'/&@#?"
+  - file: "gfonts://Roboto"
+    id: roboto_14
+    size: 14
+    glyphs: "!\"%()+=-,_.:°0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ abcdefghijklmnopqrstuvwxyz'/&@#?"
+
+# -------------------------------
+# LVGL Display
+# -------------------------------
+display:
+  - platform: mipi_dsi
+    model: JC1060P470
+    id: my_lcd
+    auto_clear_enabled: false  # Required for LVGL - LVGL manages rendering
+    update_interval: 33ms
+    reset_pin: GPIO27
+    dimensions:
+      width: 1024
+      height: 600
+
+i2c:
+  - id: i2c_bus
+    sda: GPIO7  
+    scl: GPIO8  
+    #scan: true
+    frequency: 400kHz  
+    
+touchscreen:
+  - platform: gt911
+    interrupt_pin: GPIO21
+    update_interval: never
+    #calibration:
+    #  x_min: 0
+    #  x_max: 1024
+    #  y_min: 0
+    #  y_max: 800
+    id: my_touchscreen
+    on_release:
+      - if:
+          condition: lvgl.is_paused
+          then:
+            - logger.log: "Screen resuming"
+            - lvgl.resume:
+            - lvgl.widget.redraw:
+            - light.turn_on: backlight    
+
+esp_ldo:
+  - voltage: 2.5V
+    channel: 3
+
+light:
+  - platform: monochromatic
+    output: backlight_pwm
+    id: backlight
+    name: LCD Backlight
+    icon: mdi:wall-sconce-flat-outline
+    restore_mode: RESTORE_DEFAULT_ON
+    on_turn_on:
+      - lvgl.resume:
+
+output:
+  - platform: ledc
+    pin: GPIO23
+    id: backlight_pwm
+    frequency: 1000Hz      
+
+# --- LVGL (Home Assistant Dark Theme) ---
+lvgl:
+  buffer_size: 12%  # Use internal RAM to prevent blank screen issues (PSRAM timing problems)
+  byte_order: little_endian
+  on_idle:
+    timeout: !lambda "return (id(display_timeout).state * 1000);"
+    then:
+      - if:
+          condition:
+            switch.is_on: screen_timeout_enabled
+          then:
+            - logger.log: "LVGL is idle - turning off screen"
+            - light.turn_off: backlight
+            - lvgl.pause:
+          else:
+            - logger.log: "LVGL is idle but timeout is disabled"
+  displays:
+    - my_lcd
+  touchscreens:
+    - my_touchscreen
+
+  # Apply Home Assistant dark theme globally
+  theme:
+    obj:
+      bg_opa: TRANSP
+      border_width: 0
+
+  pages:
+    - id: coverpage
+      bg_color: ha_bg_primary
+      widgets:
+        # ==================== HEADER SECTION (50px) ====================
+        # Date and time display (secret button to settings)
+        - button:
+            id: header_datetime_btn
+            x: 20
+            y: 10
+            width: 320
+            height: 40
+            bg_opa: TRANSP
+            border_width: 0
+            shadow_width: 0
+            widgets:
+              - label:
+                  id: header_datetime
+                  text: "Vrijdag 14 november 2025 - 17:09"
+                  text_color: ha_text_primary
+                  text_font: roboto_20
+                  align: LEFT_MID
+                  x: 5
+            on_press:
+              - logger.log: "Opening settings page"
+              - lvgl.page.show: page_settings
+
+        # Energy price chart (right-aligned, 2 cards width = 648px)
+        # Position: 1024 - 648 - 20 (margin) = 356
+        - image:
+            id: energieprijzen_widget
+            src: energieprijzen_image
+            x: 356
+            y: 0
+            align: TOP_LEFT
+
+        # ==================== MAIN CARDS / WIDGETS SECTION (500px) ====================
+        # Row 1 - Y: 70 - Climate, Cameras, Agenda (20px margin from header)
+
+        # Card 1: Climate
+        - obj:
+            id: card_climate
+            x: 20
+            y: 70
+            width: 314
+            height: 220
+            bg_color: ha_bg_card
+            radius: 12
+            border_width: 0
+            scrollbar_mode: "off"
+            widgets:
+              # Indoor temperature tile
+              - obj:
+                  id: indoor_tile
+                  x: 10
+                  y: 10
+                  width: 142
+                  height: 70
+                  bg_color: 0x3D1F1F
+                  radius: 8
+                  border_width: 0
+                  scrollbar_mode: "off"
+                  widgets:
+                    - image:
+                        src: thermometer_hot
+                        x: 8
+                        y: 8
+                        image_recolor: 0xFF6B6B
+                        image_recolor_opa: COVER
+                    - label:
+                        text: "Binnen"
+                        x: 8
+                        y: 38
+                        text_color: 0xFF6B6B
+                        text_font: roboto_14
+                    - label:
+                        id: indoor_temp_label
+                        text: "--°C"
+                        align: TOP_RIGHT
+                        x: -8
+                        y: 8
+                        text_color: 0xFF6B6B
+                        text_font: roboto_20
+
+              # Outdoor temperature tile
+              - obj:
+                  id: outdoor_tile
+                  x: 162
+                  y: 10
+                  width: 142
+                  height: 70
+                  bg_color: 0x1F2D3D
+                  radius: 8
+                  border_width: 0
+                  scrollbar_mode: "off"
+                  widgets:
+                    - image:
+                        src: thermometer_cold
+                        x: 8
+                        y: 8
+                        image_recolor: 0x6BB6FF
+                        image_recolor_opa: COVER
+                    - label:
+                        text: "Buiten"
+                        x: 8
+                        y: 38
+                        text_color: 0x6BB6FF
+                        text_font: roboto_14
+                    - label:
+                        id: outdoor_temp_label
+                        text: "--°C"
+                        align: TOP_RIGHT
+                        x: -8
+                        y: 8
+                        text_color: 0x6BB6FF
+                        text_font: roboto_20
+
+              # Thermostat mode label
+              - label:
+                  text: "Thermostat Mode"
+                  x: 10
+                  y: 115
+                  text_color: ha_text_secondary
+                  text_font: roboto_14
+
+              # Thermostat mode dropdown
+              - dropdown:
+                  id: thermostat_dropdown
+                  x: 10
+                  y: 150
+                  width: 285
+                  height: 45
+                  options:
+                    - "Permanent aan"
+                    - "Permanent uit"
+                    - "Volgens schema"
+                    - "Vakantie"
+                    - "Tijdelijk aan"
+                    - "Koelen"
+                  bg_color: 0x2C2C2E
+                  text_color: ha_text_primary
+                  text_font: montserrat_16
+                  border_color: 0x3A3A3C
+                  border_width: 1
+                  radius: 8
+                  on_value:
+                    then:
+                      - homeassistant.service:
+                          service: input_select.select_option
+                          data:
+                            entity_id: input_select.thermostaat_mode
+                            option: !lambda |-
+                              return id(thermostat_dropdown).get_selected_text();
+
+        # Card 2: Cameras
+        - obj:
+            id: card_cameras
+            x: 354
+            y: 70
+            width: 314
+            height: 220
+            bg_color: ha_bg_card
+            radius: 12
+            border_width: 0
+            scrollbar_mode: "off"
+            clip_corner: true
+            widgets:
+              - image:
+                  id: camera_widget
+                  src: camera1_image
+                  align: CENTER
+
+        # Card 3: Agenda
+        - obj:
+            id: card_agenda
+            x: 688
+            y: 70
+            width: 314
+            height: 220
+            bg_color: ha_bg_card
+            radius: 12
+            border_width: 0
+            scrollbar_mode: "off"
+            widgets:
+              - image:
+                  id: agenda_widget
+                  src: agenda_image
+                  align: CENTER
+
+        # Row 2 - Y: 310 - Music, Energy, Weather Radar (20px gap from row 1)
+
+        # Card 4: Music - Radio Stations
+        - obj:
+            id: card_music
+            x: 20
+            y: 310
+            width: 314
+            height: 220
+            bg_color: ha_bg_card
+            radius: 12
+            border_width: 0
+            scrollbar_mode: "off"
+            widgets:
+              # Radio 10 Non-stop
+              - button:
+                  id: radio10_btn
+                  x: 10
+                  y: 10
+                  width: 92
+                  height: 92
+                  bg_color: 0x2C2C2E
+                  radius: 12
+                  border_width: 0
+                  widgets:
+                    - image:
+                        src: radio10_logo
+                        align: CENTER
+                  on_press:
+                    - homeassistant.service:
+                        service: media_player.play_media
+                        data:
+                          entity_id: media_player.marantz_heos
+                          media_content_type: playlist
+                          media_content_id: media-source://radio_browser/c1c834eb-e84e-43fc-8841-6749e19b4edc
+
+              # Q-music
+              - button:
+                  id: qmusic_btn
+                  x: 111
+                  y: 10
+                  width: 92
+                  height: 92
+                  bg_color: 0x2C2C2E
+                  radius: 12
+                  border_width: 0
+                  widgets:
+                    - image:
+                        src: qmusic_logo
+                        align: CENTER
+                  on_press:
+                    - homeassistant.service:
+                        service: media_player.play_media
+                        data:
+                          entity_id: media_player.marantz_heos
+                          media_content_type: playlist
+                          media_content_id: media-source://radio_browser/9103990d-f203-410e-8764-0cd81b415e6d
+
+              # Skyradio
+              - button:
+                  id: skyradio_btn
+                  x: 212
+                  y: 10
+                  width: 92
+                  height: 92
+                  bg_color: 0x2C2C2E
+                  radius: 12
+                  border_width: 0
+                  widgets:
+                    - image:
+                        src: skyradio_logo
+                        align: CENTER
+                  on_press:
+                    - homeassistant.service:
+                        service: media_player.play_media
+                        data:
+                          entity_id: media_player.marantz_heos
+                          media_content_type: playlist
+                          media_content_id: media-source://radio_browser/b20de429-e1b3-4624-a1ac-12e2bf0cadb0
+                                            
+        # Card 5: Energy
+        - obj:
+            id: card_energy
+            x: 354
+            y: 310
+            width: 314
+            height: 220
+            bg_color: ha_bg_card
+            radius: 12
+            border_width: 0
+            scrollbar_mode: "off"
+            widgets:
+              # Energy meter (arc/gauge) - centered
+              - arc:
+                  id: energy_meter
+                  align: TOP_MID
+                  y: 30
+                  width: 150
+                  height: 150
+                  start_angle: 150
+                  end_angle: 30
+                  rotation: 0
+                  value: 50
+                  min_value: 0
+                  max_value: 100
+                  arc_color: 0x3A3A3C
+                  arc_width: 20
+                  indicator:
+                    arc_color: 0x0A84FF
+                    arc_width: 20
+                  knob:
+                    bg_opa: TRANSP
+
+              # Center label (net energy)
+              - label:
+                  id: energy_net_label
+                  text: "0.0"
+                  align: TOP_MID
+                  y: 75
+                  text_color: ha_text_primary
+                  text_font: roboto_20
+
+              # Consumption (left side)
+              - label:
+                  text: "Verbruik"
+                  x: 30
+                  y: 150
+                  text_color: ha_text_secondary
+                  text_font: roboto_14
+              - label:
+                  id: energy_consumption_label
+                  text: "0.0 kWh"
+                  x: 30
+                  y: 170
+                  text_color: 0xFF3B30
+                  text_font: roboto_16
+
+              # Production (right side)
+              - label:
+                  text: "Productie"
+                  x: 194
+                  y: 150
+                  text_color: ha_text_secondary
+                  text_font: roboto_14
+              - label:
+                  id: energy_production_label
+                  text: "0.0 kWh"
+                  x: 194
+                  y: 170
+                  text_color: 0x34C759
+                  text_font: roboto_16
+
+        # Card 6: Weather Radar
+        - obj:
+            id: card_weather_radar
+            x: 688
+            y: 310
+            width: 314
+            height: 220
+            bg_color: ha_bg_card
+            radius: 12
+            border_width: 0
+            scrollbar_mode: "off"
+            clip_corner: true
+            widgets:
+              - image:
+                  id: buienradar_widget
+                  src: buienradar_frame_1
+                  align: CENTER
+
+        # ==================== SHORTCUTS SECTION (50px) ====================
+
+        # Shortcut 1: Henry (Vacuum)
+        - button:
+            id: shortcut_henry
+            x: 20
+            y: 550
+            width: 314
+            height: 40
+            bg_color: ha_bg_card
+            radius: 8
+            border_width: 0
+            widgets:
+              - image:
+                  src: vacuum_icon
+                  align: LEFT_MID
+                  x: 10
+                  image_recolor: ha_text_primary
+                  image_recolor_opa: COVER
+              - label:
+                  text: "Henry"
+                  align: CENTER
+                  text_color: ha_text_primary
+                  text_font: roboto_16
+            on_press:
+              - logger.log: "Henry pressed - navigating to vacuum page"
+              - lvgl.page.show: page_henry
+
+        # Shortcut 2: Zonwering
+        - button:
+            id: shortcut_zonwering
+            x: 354
+            y: 550
+            width: 314
+            height: 40
+            bg_color: ha_bg_card
+            radius: 8
+            border_width: 0
+            widgets:
+              - image:
+                  src: awning_icon
+                  align: LEFT_MID
+                  x: 10
+                  image_recolor: ha_text_primary
+                  image_recolor_opa: COVER
+              - label:
+                  text: "Zonwering"
+                  align: CENTER
+                  text_color: ha_text_primary
+                  text_font: roboto_16
+            on_press:
+              - logger.log: "Zonwering pressed - navigating to covers page"
+              - lvgl.page.show: page_zonwering
+
+        # Shortcut 3: Thuiswerken
+        - button:
+            id: shortcut_thuiswerken
+            x: 688
+            y: 550
+            width: 314
+            height: 40
+            bg_color: ha_bg_card
+            radius: 8
+            border_width: 0
+            widgets:
+              - image:
+                  src: laptop_icon
+                  align: LEFT_MID
+                  x: 10
+                  image_recolor: ha_text_primary
+                  image_recolor_opa: COVER
+              - label:
+                  text: "Thuiswerken"
+                  align: CENTER
+                  text_color: ha_text_primary
+                  text_font: roboto_16
+            on_press:
+              - logger.log: "Thuiswerken toggled"
+              - homeassistant.service:
+                  service: input_boolean.toggle
+                  data:
+                    entity_id: input_boolean.thuiswerken
+
+        # ==================== HENRY WAITING MODAL ====================
+        # Semi-transparent overlay
+        - obj:
+            id: henry_modal_overlay
+            x: 0
+            y: 0
+            width: 1024
+            height: 600
+            bg_color: 0x000000
+            bg_opa: 70%
+            border_width: 0
+            hidden: true
+            clickable: false
+            scrollable: false
+            widgets:
+              # Message box card
+              - obj:
+                  id: henry_modal_card
+                  align: CENTER
+                  width: 500
+                  height: 280
+                  bg_color: ha_bg_card
+                  radius: 16
+                  border_width: 0
+                  scrollbar_mode: "off"
+                  clickable: true
+                  scrollable: false
+                  widgets:
+                    # Icon
+                    - image:
+                        src: vacuum_icon
+                        align: TOP_MID
+                        y: 30
+                        image_recolor: 0x0A84FF
+                        image_recolor_opa: COVER
+                    # Title
+                    - label:
+                        text: "Henry wacht op jou"
+                        align: TOP_MID
+                        y: 70
+                        text_color: ha_text_primary
+                        text_font: roboto_20
+                    # Message
+                    - label:
+                        text: "Zet Henry op de juiste plek en klik Doorgaan."
+                        align: TOP_MID
+                        y: 105
+                        text_color: ha_text_secondary
+                        text_font: roboto_16
+                    # Continue button - large and easy to click
+                    # Using obj instead of button to avoid double-click issue
+                    - obj:
+                        align: BOTTOM_MID
+                        y: -20
+                        width: 400
+                        height: 80
+                        bg_color: 0x0A84FF
+                        bg_opa: COVER
+                        radius: 16
+                        border_width: 0
+                        pad_all: 10
+                        clickable: true
+                        shadow_width: 40
+                        shadow_color: 0x000000
+                        shadow_opa: 50%
+                        shadow_spread: 2
+                        shadow_ofs_x: 0
+                        shadow_ofs_y: 8
+                        widgets:
+                          - label:
+                              text: "Doorgaan"
+                              align: CENTER
+                              text_color: 0xFFFFFF
+                              text_font: roboto_20
+                        on_click:
+                          - logger.log: "Henry continue clicked"
+                          - homeassistant.service:
+                              service: input_boolean.turn_off
+                              data:
+                                entity_id: input_boolean.stofzuiger_wacht_op_input
+
+    # ==================== HENRY VACUUM PAGE ====================
+    - id: page_henry
+      bg_color: ha_bg_primary
+      widgets:
+        # Header met terug knop
+        - button:
+            id: btn_back_to_main
+            x: 20
+            y: 15
+            width: 120
+            height: 40
+            bg_color: ha_bg_card
+            radius: 8
+            widgets:
+              - image:
+                  src: arrow_left_icon
+                  align: LEFT_MID
+                  x: 10
+                  image_recolor: ha_text_primary
+                  image_recolor_opa: COVER
+              - label:
+                  text: "Terug"
+                  align: CENTER
+                  x: 15
+                  text_color: ha_text_primary
+                  text_font: roboto_16
+            on_press:
+              - logger.log: "Back button pressed"
+              - lvgl.page.show: coverpage
+
+        # Pagina titel
+        - label:
+            text: "Henry Stofzuiger"
+            x: 160
+            y: 25
+            text_color: ha_text_primary
+            text_font: roboto_20
+
+        # ==================== STOFZUIGEN SECTIE ====================
+        - image:
+            src: vacuum_icon
+            x: 20
+            y: 73
+            image_recolor: ha_text_primary
+            image_recolor_opa: COVER
+        - label:
+            text: "Stofzuigen"
+            x: 50
+            y: 70
+            text_color: ha_text_primary
+            text_font: roboto_20
+
+        # Row 1: Alles, Keuken, Woonkamer
+        - button:
+            id: btn_vacuum_alles
+            x: 20
+            y: 100
+            width: 314
+            height: 60
+            bg_color: ha_bg_card
+            radius: 8
+            widgets:
+              - image:
+                  src: home_icon
+                  align: LEFT_MID
+                  x: 10
+                  image_recolor: ha_text_primary
+                  image_recolor_opa: COVER
+              - label:
+                  text: "Alles"
+                  align: CENTER
+                  text_color: ha_text_primary
+                  text_font: roboto_16
+            on_press:
+              - logger.log: "Vacuum Alles pressed"
+              - homeassistant.service:
+                  service: script.schoonmaken_beneden_stofzuigen_dweilen
+                  data:
+                    room: "Alles"
+                    mode: "Stofzuigen"
+                    repeat: "1"
+
+        - button:
+            id: btn_vacuum_keuken
+            x: 354
+            y: 100
+            width: 314
+            height: 60
+            bg_color: ha_bg_card
+            radius: 8
+            widgets:
+              - image:
+                  src: silverware_icon
+                  align: LEFT_MID
+                  x: 10
+                  image_recolor: ha_text_primary
+                  image_recolor_opa: COVER
+              - label:
+                  text: "Keuken"
+                  align: CENTER
+                  text_color: ha_text_primary
+                  text_font: roboto_16
+            on_press:
+              - logger.log: "Vacuum Keuken pressed"
+              - homeassistant.service:
+                  service: script.schoonmaken_beneden_stofzuigen_dweilen
+                  data:
+                    room: "Keuken"
+                    mode: "Stofzuigen"
+                    repeat: "1"
+                          
+        - button:
+            id: btn_vacuum_woonkamer
+            x: 688
+            y: 100
+            width: 314
+            height: 60
+            bg_color: ha_bg_card
+            radius: 8
+            widgets:
+              - image:
+                  src: sofa_icon
+                  align: LEFT_MID
+                  x: 10
+                  image_recolor: ha_text_primary
+                  image_recolor_opa: COVER
+              - label:
+                  text: "Woonkamer"
+                  align: CENTER
+                  text_color: ha_text_primary
+                  text_font: roboto_16
+            on_press:
+              - logger.log: "Vacuum Woonkamer pressed"
+              - homeassistant.service:
+                  service: script.schoonmaken_beneden_stofzuigen_dweilen
+                  data:
+                    room: "Woonkamer"
+                    mode: "Stofzuigen"
+                    repeat: "1"
+
+        # Row 2: Hal, Voordeur
+        - button:
+            id: btn_vacuum_hal
+            x: 20
+            y: 170
+            width: 314
+            height: 60
+            bg_color: ha_bg_card
+            radius: 8
+            widgets:
+              - image:
+                  src: coat_rack_icon
+                  align: LEFT_MID
+                  x: 10
+                  image_recolor: ha_text_primary
+                  image_recolor_opa: COVER
+              - label:
+                  text: "Hal"
+                  align: CENTER
+                  text_color: ha_text_primary
+                  text_font: roboto_16
+            on_press:
+              - logger.log: "Vacuum Hal pressed"
+              - homeassistant.service:
+                  service: script.schoonmaken_beneden_stofzuigen_dweilen
+                  data:
+                    room: "Hal"
+                    mode: "Stofzuigen"
+                    repeat: "1"
+
+        - button:
+            id: btn_vacuum_voordeur
+            x: 354
+            y: 170
+            width: 314
+            height: 60
+            bg_color: ha_bg_card
+            radius: 8
+            widgets:
+              - image:
+                  src: door_icon
+                  align: LEFT_MID
+                  x: 10
+                  image_recolor: ha_text_primary
+                  image_recolor_opa: COVER
+              - label:
+                  text: "Voordeur"
+                  align: CENTER
+                  text_color: ha_text_primary
+                  text_font: roboto_16
+            on_press:
+              - logger.log: "Vacuum Voordeur pressed"
+              - homeassistant.service:
+                  service: script.schoonmaken_beneden_stofzuigen_dweilen
+                  data:
+                    room: "Voordeur"
+                    mode: "Stofzuigen"
+                    repeat: "2"
+
+        # ==================== DWEILEN SECTIE ====================
+        - image:
+            src: water_icon
+            x: 20
+            y: 253
+            image_recolor: ha_text_primary
+            image_recolor_opa: COVER
+        - label:
+            text: "Dweilen"
+            x: 50
+            y: 250
+            text_color: ha_text_primary
+            text_font: roboto_20
+
+        # Row 1: Alles, Keuken, Woonkamer (met blauwe achtergrond)
+        - button:
+            id: btn_mop_alles
+            x: 20
+            y: 280
+            width: 314
+            height: 60
+            bg_color: 0x1A4D7A
+            radius: 8
+            widgets:
+              - image:
+                  src: home_icon
+                  align: LEFT_MID
+                  x: 10
+                  image_recolor: ha_text_primary
+                  image_recolor_opa: COVER
+              - label:
+                  text: "Alles"
+                  align: CENTER
+                  text_color: ha_text_primary
+                  text_font: roboto_16
+            on_press:
+              - logger.log: "Mop Alles pressed"
+              - homeassistant.service:
+                  service: script.schoonmaken_beneden_stofzuigen_dweilen
+                  data:
+                    room: "Alles"
+                    mode: "Beide"
+                    repeat: "1"
+
+        - button:
+            id: btn_mop_keuken
+            x: 354
+            y: 280
+            width: 314
+            height: 60
+            bg_color: 0x1A4D7A
+            radius: 8
+            widgets:
+              - image:
+                  src: silverware_icon
+                  align: LEFT_MID
+                  x: 10
+                  image_recolor: ha_text_primary
+                  image_recolor_opa: COVER
+              - label:
+                  text: "Keuken"
+                  align: CENTER
+                  text_color: ha_text_primary
+                  text_font: roboto_16
+            on_press:
+              - logger.log: "Mop Keuken pressed"
+              - homeassistant.service:
+                  service: script.schoonmaken_beneden_stofzuigen_dweilen
+                  data:
+                    room: "Keuken"
+                    mode: "Beide"
+                    repeat: "1"
+
+        - button:
+            id: btn_mop_woonkamer
+            x: 688
+            y: 280
+            width: 314
+            height: 60
+            bg_color: 0x1A4D7A
+            radius: 8
+            widgets:
+              - image:
+                  src: sofa_icon
+                  align: LEFT_MID
+                  x: 10
+                  image_recolor: ha_text_primary
+                  image_recolor_opa: COVER
+              - label:
+                  text: "Woonkamer"
+                  align: CENTER
+                  text_color: ha_text_primary
+                  text_font: roboto_16
+            on_press:
+              - logger.log: "Mop Woonkamer pressed"
+              - homeassistant.service:
+                  service: script.schoonmaken_beneden_stofzuigen_dweilen
+                  data:
+                    room: "Woonkamer"
+                    mode: "Beide"
+                    repeat: "1"
+
+        # Row 2: Hal, Keuken Intensief
+        - button:
+            id: btn_mop_hal
+            x: 20
+            y: 350
+            width: 314
+            height: 60
+            bg_color: 0x1A4D7A
+            radius: 8
+            widgets:
+              - image:
+                  src: coat_rack_icon
+                  align: LEFT_MID
+                  x: 10
+                  image_recolor: ha_text_primary
+                  image_recolor_opa: COVER
+              - label:
+                  text: "Hal"
+                  align: CENTER
+                  text_color: ha_text_primary
+                  text_font: roboto_16
+            on_press:
+              - logger.log: "Mop Hal pressed"
+              - homeassistant.service:
+                  service: script.schoonmaken_beneden_stofzuigen_dweilen
+                  data:
+                    room: "Hal"
+                    mode: "Beide"
+                    repeat: "1"
+
+        - button:
+            id: btn_mop_keuken_intensief
+            x: 354
+            y: 350
+            width: 314
+            height: 60
+            bg_color: 0x1A4D7A
+            radius: 8
+            widgets:
+              - image:
+                  src: silverware_icon
+                  align: LEFT_MID
+                  x: 10
+                  image_recolor: ha_text_primary
+                  image_recolor_opa: COVER
+              - label:
+                  text: "Keuken Intensief"
+                  align: CENTER
+                  text_color: ha_text_primary
+                  text_font: roboto_14
+            on_press:
+              - logger.log: "Mop Keuken Intensief pressed"
+              - homeassistant.service:
+                  service: script.schoonmaken_beneden_stofzuigen_dweilen
+                  data:
+                    room: "Alleen_Keuken"
+                    mode: "Beide"
+                    repeat: "2"
+
+        # ==================== BOVEN SECTIE ====================
+        - image:
+            src: home_floor_1_icon
+            x: 20
+            y: 433
+            image_recolor: ha_text_primary
+            image_recolor_opa: COVER
+        - label:
+            text: "Boven"
+            x: 50
+            y: 430
+            text_color: ha_text_primary
+            text_font: roboto_20
+
+        - button:
+            id: btn_upstairs_vacuum
+            x: 20
+            y: 460
+            width: 314
+            height: 60
+            bg_color: ha_bg_card
+            radius: 8
+            widgets:
+              - image:
+                  src: vacuum_icon
+                  align: LEFT_MID
+                  x: 10
+                  image_recolor: ha_text_primary
+                  image_recolor_opa: COVER
+              - label:
+                  text: "Stofzuigen"
+                  align: CENTER
+                  text_color: ha_text_primary
+                  text_font: roboto_16
+            on_press:
+              - logger.log: "Upstairs Vacuum pressed"
+              - homeassistant.service:
+                  service: script.schoonmaken_boven
+                  data:
+                    mode: "Stofzuigen"
+
+        - button:
+            id: btn_upstairs_mop
+            x: 354
+            y: 460
+            width: 314
+            height: 60
+            bg_color: 0x1A4D7A
+            radius: 8
+            widgets:
+              - image:
+                  src: water_icon
+                  align: LEFT_MID
+                  x: 10
+                  image_recolor: ha_text_primary
+                  image_recolor_opa: COVER
+              - label:
+                  text: "Dweilen"
+                  align: CENTER
+                  text_color: ha_text_primary
+                  text_font: roboto_16
+            on_press:
+              - logger.log: "Upstairs Mop pressed"
+              - homeassistant.service:
+                  service: script.schoonmaken_boven
+                  data:
+                    mode: "Beide"
+
+    # ==================== ZONWERING PAGE ====================
+    - id: page_zonwering
+      bg_color: ha_bg_primary
+      widgets:
+        # Header met terug knop
+        - button:
+            id: btn_back_zonwering
+            x: 20
+            y: 15
+            width: 120
+            height: 40
+            bg_color: ha_bg_card
+            radius: 8
+            widgets:
+              - image:
+                  src: arrow_left_icon
+                  align: LEFT_MID
+                  x: 10
+                  image_recolor: ha_text_primary
+                  image_recolor_opa: COVER
+              - label:
+                  text: "Terug"
+                  align: CENTER
+                  x: 15
+                  text_color: ha_text_primary
+                  text_font: roboto_16
+            on_press:
+              - logger.log: "Back button pressed"
+              - lvgl.page.show: coverpage
+
+        # Pagina titel
+        - label:
+            text: "Zonwering"
+            x: 160
+            y: 25
+            text_color: ha_text_primary
+            text_font: roboto_20
+
+        # Solar Radiation badge (rechts boven)
+        - image:
+            src: sun_icon
+            x: 890
+            y: 20
+            image_recolor: 0xFFA500
+            image_recolor_opa: COVER
+        - label:
+            id: solar_radiation_label
+            text: "-- W/m2"
+            x: 920
+            y: 22
+            text_color: ha_text_secondary
+            text_font: roboto_14
+
+        # ==================== ZONNESCHERM ====================
+        - obj:
+            id: cover_zonnescherm_card
+            x: 20
+            y: 70
+            width: 314
+            height: 220
+            bg_color: ha_bg_card
+            radius: 12
+            border_width: 0
+            scrollbar_mode: "off"
+            widgets:
+              # Icon en naam
+              - image:
+                  src: awning_icon
+                  x: 10
+                  y: 10
+                  image_recolor: ha_text_primary
+                  image_recolor_opa: COVER
+              - label:
+                  text: "Zonnescherm"
+                  x: 45
+                  y: 12
+                  text_color: ha_text_primary
+                  text_font: roboto_20
+              # Status
+              - label:
+                  id: zonnescherm_status
+                  text: "0%"
+                  x: 45
+                  y: 38
+                  text_color: ha_text_secondary
+                  text_font: roboto_16
+              # Positie slider
+              - slider:
+                  id: zonnescherm_slider
+                  x: 10
+                  y: 70
+                  width: 280
+                  height: 10
+                  min_value: 0
+                  max_value: 100
+                  value: 0
+                  bg_color: 0x3A3A3C
+                  indicator:
+                    bg_color: ha_text_primary
+                  on_release:
+                    - homeassistant.service:
+                        service: cover.set_cover_position
+                        data:
+                          entity_id: cover.zonnescherm_met_positie
+                          position: !lambda 'return (int)x;'
+              # Sluiten knop
+              - button:
+                  x: 10
+                  y: 105
+                  width: 90
+                  height: 100
+                  bg_color: 0x2C2C2E
+                  radius: 8
+                  widgets:
+                    - image:
+                        src: chevron_down_icon
+                        align: CENTER
+                        y: -20
+                        image_recolor: ha_text_primary
+                        image_recolor_opa: COVER
+                    - label:
+                        text: "Sluiten"
+                        align: CENTER
+                        y: 10
+                        text_color: ha_text_primary
+                        text_font: roboto_16
+                  on_press:
+                    - homeassistant.service:
+                        service: cover.close_cover
+                        data:
+                          entity_id: cover.zonnescherm_met_positie
+              # Stop knop
+              - button:
+                  x: 107
+                  y: 105
+                  width: 90
+                  height: 100
+                  bg_color: 0x2C2C2E
+                  radius: 8
+                  widgets:
+                    - image:
+                        src: stop_icon
+                        align: CENTER
+                        y: -20
+                        image_recolor: ha_text_primary
+                        image_recolor_opa: COVER
+                    - label:
+                        text: "Stop"
+                        align: CENTER
+                        y: 10
+                        text_color: ha_text_primary
+                        text_font: roboto_16
+                  on_press:
+                    - homeassistant.service:
+                        service: cover.stop_cover
+                        data:
+                          entity_id: cover.zonnescherm_met_positie
+              # Openen knop
+              - button:
+                  x: 204
+                  y: 105
+                  width: 90
+                  height: 100
+                  bg_color: 0x2C2C2E
+                  radius: 8
+                  widgets:
+                    - image:
+                        src: chevron_up_icon
+                        align: CENTER
+                        y: -20
+                        image_recolor: ha_text_primary
+                        image_recolor_opa: COVER
+                    - label:
+                        text: "Openen"
+                        align: CENTER
+                        y: 10
+                        text_color: ha_text_primary
+                        text_font: roboto_16
+                  on_press:
+                    - homeassistant.service:
+                        service: cover.open_cover
+                        data:
+                          entity_id: cover.zonnescherm_met_positie
+
+        # ==================== SCREEN VOOR ====================
+        - obj:
+            id: cover_screen_voor_card
+            x: 354
+            y: 70
+            width: 314
+            height: 220
+            bg_color: ha_bg_card
+            radius: 12
+            border_width: 0
+            scrollbar_mode: "off"
+            widgets:
+              - image:
+                  src: blinds_icon
+                  x: 10
+                  y: 10
+                  image_recolor: ha_text_primary
+                  image_recolor_opa: COVER
+              - label:
+                  text: "Screen Voor"
+                  x: 45
+                  y: 12
+                  text_color: ha_text_primary
+                  text_font: roboto_20
+              - label:
+                  id: screen_voor_status
+                  text: "0%"
+                  x: 45
+                  y: 38
+                  text_color: ha_text_secondary
+                  text_font: roboto_16
+              - slider:
+                  id: screen_voor_slider
+                  x: 10
+                  y: 70
+                  width: 280
+                  height: 10
+                  min_value: 0
+                  max_value: 100
+                  value: 0
+                  bg_color: 0x3A3A3C
+                  indicator:
+                    bg_color: ha_text_primary
+                  on_release:
+                    - homeassistant.service:
+                        service: cover.set_cover_position
+                        data:
+                          entity_id: cover.screen_voor_met_positie
+                          position: !lambda 'return (int)x;'
+              - button:
+                  x: 10
+                  y: 105
+                  width: 90
+                  height: 100
+                  bg_color: 0x2C2C2E
+                  radius: 8
+                  widgets:
+                    - image:
+                        src: chevron_down_icon
+                        align: CENTER
+                        y: -20
+                        image_recolor: ha_text_primary
+                        image_recolor_opa: COVER
+                    - label:
+                        text: "Sluiten"
+                        align: CENTER
+                        y: 10
+                        text_color: ha_text_primary
+                        text_font: roboto_16
+                  on_press:
+                    - homeassistant.service:
+                        service: cover.close_cover
+                        data:
+                          entity_id: cover.screen_voor_met_positie
+              - button:
+                  x: 107
+                  y: 105
+                  width: 90
+                  height: 100
+                  bg_color: 0x2C2C2E
+                  radius: 8
+                  widgets:
+                    - image:
+                        src: stop_icon
+                        align: CENTER
+                        y: -20
+                        image_recolor: ha_text_primary
+                        image_recolor_opa: COVER
+                    - label:
+                        text: "Stop"
+                        align: CENTER
+                        y: 10
+                        text_color: ha_text_primary
+                        text_font: roboto_16
+                  on_press:
+                    - homeassistant.service:
+                        service: cover.stop_cover
+                        data:
+                          entity_id: cover.screen_voor_met_positie
+              - button:
+                  x: 204
+                  y: 105
+                  width: 90
+                  height: 100
+                  bg_color: 0x2C2C2E
+                  radius: 8
+                  widgets:
+                    - image:
+                        src: chevron_up_icon
+                        align: CENTER
+                        y: -20
+                        image_recolor: ha_text_primary
+                        image_recolor_opa: COVER
+                    - label:
+                        text: "Openen"
+                        align: CENTER
+                        y: 10
+                        text_color: ha_text_primary
+                        text_font: roboto_16
+                  on_press:
+                    - homeassistant.service:
+                        service: cover.open_cover
+                        data:
+                          entity_id: cover.screen_voor_met_positie
+
+        # ==================== SCREEN ACHTER ====================
+        - obj:
+            id: cover_screen_achter_card
+            x: 688
+            y: 70
+            width: 314
+            height: 220
+            bg_color: ha_bg_card
+            radius: 12
+            border_width: 0
+            scrollbar_mode: "off"
+            widgets:
+              - image:
+                  src: blinds_icon
+                  x: 10
+                  y: 10
+                  image_recolor: ha_text_primary
+                  image_recolor_opa: COVER
+              - label:
+                  text: "Screen Achter"
+                  x: 45
+                  y: 12
+                  text_color: ha_text_primary
+                  text_font: roboto_20
+              - label:
+                  id: screen_achter_status
+                  text: "0%"
+                  x: 45
+                  y: 38
+                  text_color: ha_text_secondary
+                  text_font: roboto_16
+              - slider:
+                  id: screen_achter_slider
+                  x: 10
+                  y: 70
+                  width: 280
+                  height: 10
+                  min_value: 0
+                  max_value: 100
+                  value: 0
+                  bg_color: 0x3A3A3C
+                  indicator:
+                    bg_color: ha_text_primary
+                  on_release:
+                    - homeassistant.service:
+                        service: cover.set_cover_position
+                        data:
+                          entity_id: cover.screen_achter_met_positie
+                          position: !lambda 'return (int)x;'
+              - button:
+                  x: 10
+                  y: 105
+                  width: 90
+                  height: 100
+                  bg_color: 0x2C2C2E
+                  radius: 8
+                  widgets:
+                    - image:
+                        src: chevron_down_icon
+                        align: CENTER
+                        y: -20
+                        image_recolor: ha_text_primary
+                        image_recolor_opa: COVER
+                    - label:
+                        text: "Sluiten"
+                        align: CENTER
+                        y: 10
+                        text_color: ha_text_primary
+                        text_font: roboto_14
+                  on_press:
+                    - homeassistant.service:
+                        service: cover.close_cover
+                        data:
+                          entity_id: cover.screen_achter_met_positie
+              - button:
+                  x: 107
+                  y: 105
+                  width: 90
+                  height: 100
+                  bg_color: 0x2C2C2E
+                  radius: 8
+                  widgets:
+                    - image:
+                        src: stop_icon
+                        align: CENTER
+                        y: -20
+                        image_recolor: ha_text_primary
+                        image_recolor_opa: COVER
+                    - label:
+                        text: "Stop"
+                        align: CENTER
+                        y: 10
+                        text_color: ha_text_primary
+                        text_font: roboto_14
+                  on_press:
+                    - homeassistant.service:
+                        service: cover.stop_cover
+                        data:
+                          entity_id: cover.screen_achter_met_positie
+              - button:
+                  x: 204
+                  y: 105
+                  width: 90
+                  height: 100
+                  bg_color: 0x2C2C2E
+                  radius: 8
+                  widgets:
+                    - image:
+                        src: chevron_up_icon
+                        align: CENTER
+                        y: -20
+                        image_recolor: ha_text_primary
+                        image_recolor_opa: COVER
+                    - label:
+                        text: "Openen"
+                        align: CENTER
+                        y: 10
+                        text_color: ha_text_primary
+                        text_font: roboto_14
+                  on_press:
+                    - homeassistant.service:
+                        service: cover.open_cover
+                        data:
+                          entity_id: cover.screen_achter_met_positie
+
+        # ==================== SCREEN BADKAMER ====================
+        - obj:
+            id: cover_screen_badkamer_card
+            x: 20
+            y: 310
+            width: 314
+            height: 220
+            bg_color: ha_bg_card
+            radius: 12
+            border_width: 0
+            scrollbar_mode: "off"
+            widgets:
+              - image:
+                  src: blinds_icon
+                  x: 10
+                  y: 10
+                  image_recolor: ha_text_primary
+                  image_recolor_opa: COVER
+              - label:
+                  text: "Screen Badkamer"
+                  x: 45
+                  y: 12
+                  text_color: ha_text_primary
+                  text_font: roboto_20
+              - label:
+                  id: screen_badkamer_status
+                  text: "0%"
+                  x: 45
+                  y: 38
+                  text_color: ha_text_secondary
+                  text_font: roboto_16
+              - slider:
+                  id: screen_badkamer_slider
+                  x: 10
+                  y: 70
+                  width: 280
+                  height: 10
+                  min_value: 0
+                  max_value: 100
+                  value: 0
+                  bg_color: 0x3A3A3C
+                  indicator:
+                    bg_color: ha_text_primary
+                  on_release:
+                    - homeassistant.service:
+                        service: cover.set_cover_position
+                        data:
+                          entity_id: cover.screen_badkamer_met_positie
+                          position: !lambda 'return (int)x;'
+              - button:
+                  x: 10
+                  y: 105
+                  width: 90
+                  height: 100
+                  bg_color: 0x2C2C2E
+                  radius: 8
+                  widgets:
+                    - image:
+                        src: chevron_down_icon
+                        align: CENTER
+                        y: -20
+                        image_recolor: ha_text_primary
+                        image_recolor_opa: COVER
+                    - label:
+                        text: "Sluiten"
+                        align: CENTER
+                        y: 10
+                        text_color: ha_text_primary
+                        text_font: roboto_14
+                  on_press:
+                    - homeassistant.service:
+                        service: cover.close_cover
+                        data:
+                          entity_id: cover.screen_badkamer_met_positie
+              - button:
+                  x: 107
+                  y: 105
+                  width: 90
+                  height: 100
+                  bg_color: 0x2C2C2E
+                  radius: 8
+                  widgets:
+                    - image:
+                        src: stop_icon
+                        align: CENTER
+                        y: -20
+                        image_recolor: ha_text_primary
+                        image_recolor_opa: COVER
+                    - label:
+                        text: "Stop"
+                        align: CENTER
+                        y: 10
+                        text_color: ha_text_primary
+                        text_font: roboto_14
+                  on_press:
+                    - homeassistant.service:
+                        service: cover.stop_cover
+                        data:
+                          entity_id: cover.screen_badkamer_met_positie
+              - button:
+                  x: 204
+                  y: 105
+                  width: 90
+                  height: 100
+                  bg_color: 0x2C2C2E
+                  radius: 8
+                  widgets:
+                    - image:
+                        src: chevron_up_icon
+                        align: CENTER
+                        y: -20
+                        image_recolor: ha_text_primary
+                        image_recolor_opa: COVER
+                    - label:
+                        text: "Openen"
+                        align: CENTER
+                        y: 10
+                        text_color: ha_text_primary
+                        text_font: roboto_14
+                  on_press:
+                    - homeassistant.service:
+                        service: cover.open_cover
+                        data:
+                          entity_id: cover.screen_badkamer_met_positie
+
+    # ==================== SETTINGS PAGE ====================
+    - id: page_settings
+      bg_color: ha_bg_primary
+      widgets:
+        # Header
+        - button:
+            id: btn_settings_back
+            x: 20
+            y: 20
+            width: 120
+            height: 40
+            bg_color: ha_bg_card
+            radius: 8
+            widgets:
+              - image:
+                  src: arrow_left_icon
+                  align: LEFT_MID
+                  x: 10
+                  image_recolor: ha_text_primary
+                  image_recolor_opa: COVER
+              - label:
+                  text: "Terug"
+                  align: CENTER
+                  x: 15
+                  text_color: ha_text_primary
+                  text_font: roboto_16
+            on_press:
+              - logger.log: "Back to coverpage"
+              - lvgl.page.show: coverpage
+
+        # Page title
+        - label:
+            text: "Instellingen"
+            x: 160
+            y: 25
+            text_color: ha_text_primary
+            text_font: roboto_20
+
+        # Screen timeout card
+        - obj:
+            id: settings_screen_timeout_card
+            x: 20
+            y: 80
+            width: 984
+            height: 180
+            bg_color: ha_bg_card
+            radius: 12
+            border_width: 0
+            scrollbar_mode: "off"
+            widgets:
+              - image:
+                  src: settings_menu
+                  x: 20
+                  y: 20
+                  image_recolor: ha_text_primary
+                  image_recolor_opa: COVER
+              - label:
+                  text: "Scherm timeout"
+                  x: 60
+                  y: 20
+                  text_color: ha_text_primary
+                  text_font: roboto_20
+              - label:
+                  text: "Schakel automatische scherm timeout in of uit en stel de tijd in."
+                  x: 60
+                  y: 50
+                  text_color: ha_text_secondary
+                  text_font: roboto_14
+              - switch:
+                  id: lvgl_screen_timeout_switch
+                  x: 880
+                  y: 35
+                  width: 80
+                  height: 50
+                  state:
+                    checked: true
+                  on_value:
+                    - switch.toggle: screen_timeout_enabled
+
+              # Timeout duration label
+              - label:
+                  text: "Timeout duur"
+                  x: 60
+                  y: 90
+                  text_color: ha_text_secondary
+                  text_font: roboto_14
+
+              # Current value display
+              - label:
+                  id: timeout_value_label
+                  text: "90s"
+                  x: 880
+                  y: 90
+                  text_color: ha_text_primary
+                  text_font: roboto_16
+
+              # Slider
+              - slider:
+                  id: timeout_slider
+                  x: 60
+                  y: 120
+                  width: 800
+                  height: 40
+                  min_value: 30
+                  max_value: 180
+                  value: 90
+                  indicator:
+                    bg_color: 0x0A84FF
+                  knob:
+                    bg_color: 0x0A84FF
+                  on_release:
+                    - number.set:
+                        id: display_timeout
+                        value: !lambda return x;
+                    - lvgl.label.update:
+                        id: timeout_value_label
+                        text: !lambda |-
+                          char buf[16];
+                          snprintf(buf, sizeof(buf), "%.0fs", x);
+                          return buf;
+
+        # System card
+        - obj:
+            id: settings_calibration_card
+            x: 20
+            y: 280
+            width: 984
+            height: 180
+            bg_color: ha_bg_card
+            radius: 12
+            border_width: 0
+            scrollbar_mode: "off"
+            widgets:
+              - image:
+                  src: settings_menu
+                  x: 20
+                  y: 20
+                  image_recolor: ha_text_primary
+                  image_recolor_opa: COVER
+              - label:
+                  text: "Systeem"
+                  x: 60
+                  y: 20
+                  text_color: ha_text_primary
+                  text_font: roboto_20
+              - label:
+                  text: "Herstart het systeem als er problemen zijn met het touchscreen."
+                  x: 60
+                  y: 50
+                  text_color: ha_text_secondary
+                  text_font: roboto_14
+              - button:
+                  x: 60
+                  y: 90
+                  width: 200
+                  height: 60
+                  bg_color: 0xFF3B30
+                  radius: 8
+                  widgets:
+                    - label:
+                        text: "Herstart"
+                        align: CENTER
+                        text_color: 0xFFFFFF
+                        text_font: roboto_16
+                  on_press:
+                    - logger.log: "Restarting ESP32"
+                    - button.press: restart_button
+              - button:
+                  x: 280
+                  y: 90
+                  width: 280
+                  height: 60
+                  bg_color: 0x0A84FF
+                  radius: 8
+                  widgets:
+                    - label:
+                        text: "Terug naar hoofdscherm"
+                        align: CENTER
+                        text_color: 0xFFFFFF
+                        text_font: roboto_16
+                  on_press:
+                    - logger.log: "Back to coverpage"
+                    - lvgl.page.show: coverpage
+
