@@ -230,6 +230,14 @@ globals:
     type: float
     restore_value: yes
     initial_value: '0.0'
+  - id: clean_mode_active
+    type: bool
+    restore_value: no
+    initial_value: 'false'
+  - id: clean_mode_countdown
+    type: int
+    restore_value: no
+    initial_value: '30'
 
 interval:
   - interval: 60s
@@ -249,6 +257,40 @@ interval:
               time.hour,
               time.minute);
             return buf;
+  - interval: 1s
+    then:
+      - lambda: |-
+          if (id(clean_mode_active)) {
+            int countdown = id(clean_mode_countdown);
+            countdown--;
+            id(clean_mode_countdown) = countdown;
+
+            if (countdown <= 0) {
+              id(clean_mode_active) = false;
+              id(clean_mode_countdown) = 30;
+            }
+          }
+      - if:
+          condition:
+            lambda: 'return id(clean_mode_active);'
+          then:
+            - lvgl.widget.show: clean_mode_overlay
+            - lvgl.widget.show: clean_mode_overlay_settings
+            - lvgl.label.update:
+                id: clean_mode_timer
+                text: !lambda |-
+                  char buf[16];
+                  sprintf(buf, "%d", id(clean_mode_countdown));
+                  return buf;
+            - lvgl.label.update:
+                id: clean_mode_timer_settings
+                text: !lambda |-
+                  char buf[16];
+                  sprintf(buf, "%d", id(clean_mode_countdown));
+                  return buf;
+          else:
+            - lvgl.widget.hide: clean_mode_overlay
+            - lvgl.widget.hide: clean_mode_overlay_settings
   - interval: 500ms
     then:
       - lambda: |-
@@ -1245,6 +1287,40 @@ lvgl:
                               service: input_boolean.turn_off
                               data:
                                 entity_id: input_boolean.stofzuiger_wacht_op_input
+
+        # ==================== CLEAN MODE OVERLAY ====================
+        # Full screen overlay with countdown timer
+        - obj:
+            id: clean_mode_overlay
+            x: 0
+            y: 0
+            width: 1024
+            height: 600
+            bg_color: 0x000000
+            bg_opa: 90%
+            border_width: 0
+            hidden: true
+            clickable: true
+            scrollable: false
+            widgets:
+              - label:
+                  text: "Scherm Schoonmaken"
+                  align: TOP_MID
+                  y: 180
+                  text_color: 0xFFFFFF
+                  text_font: roboto_20
+              - label:
+                  id: clean_mode_timer
+                  text: "30"
+                  align: CENTER
+                  text_color: 0x0A84FF
+                  text_font: roboto_20
+              - label:
+                  text: "seconden resterend"
+                  align: BOTTOM_MID
+                  y: -180
+                  text_color: 0xFFFFFF
+                  text_font: roboto_16
 
     # ==================== HENRY VACUUM PAGE ====================
     - id: page_henry
@@ -2354,11 +2430,61 @@ lvgl:
                           snprintf(buf, sizeof(buf), "%.0fs", x);
                           return buf;
 
+        # Clean screen card
+        - obj:
+            id: settings_clean_screen_card
+            x: 20
+            y: 280
+            width: 984
+            height: 120
+            bg_color: ha_bg_card
+            radius: 12
+            border_width: 0
+            scrollbar_mode: "off"
+            widgets:
+              - image:
+                  src: settings_menu
+                  x: 20
+                  y: 20
+                  image_recolor: ha_text_primary
+                  image_recolor_opa: COVER
+              - label:
+                  text: "Scherm schoonmaken"
+                  x: 60
+                  y: 20
+                  text_color: ha_text_primary
+                  text_font: roboto_20
+              - label:
+                  text: "Blokkeer touch invoer voor 30 seconden om het scherm schoon te maken."
+                  x: 60
+                  y: 50
+                  text_color: ha_text_secondary
+                  text_font: roboto_14
+              - button:
+                  x: 740
+                  y: 20
+                  width: 220
+                  height: 80
+                  bg_color: 0x0A84FF
+                  radius: 8
+                  widgets:
+                    - label:
+                        text: "Start Schoonmaken"
+                        align: CENTER
+                        text_color: 0xFFFFFF
+                        text_font: roboto_16
+                  on_press:
+                    - logger.log: "Clean mode activated"
+                    - lambda: |-
+                        id(clean_mode_active) = true;
+                        id(clean_mode_countdown) = 30;
+                    - lvgl.widget.show: clean_mode_overlay_settings
+
         # System card
         - obj:
             id: settings_calibration_card
             x: 20
-            y: 280
+            y: 420
             width: 984
             height: 180
             bg_color: ha_bg_card
@@ -2416,4 +2542,38 @@ lvgl:
                   on_press:
                     - logger.log: "Back to coverpage"
                     - lvgl.page.show: coverpage
+
+        # ==================== CLEAN MODE OVERLAY (Settings page) ====================
+        # Full screen overlay with countdown timer
+        - obj:
+            id: clean_mode_overlay_settings
+            x: 0
+            y: 0
+            width: 1024
+            height: 600
+            bg_color: 0x000000
+            bg_opa: 90%
+            border_width: 0
+            hidden: true
+            clickable: true
+            scrollable: false
+            widgets:
+              - label:
+                  text: "Scherm Schoonmaken"
+                  align: TOP_MID
+                  y: 180
+                  text_color: 0xFFFFFF
+                  text_font: roboto_20
+              - label:
+                  id: clean_mode_timer_settings
+                  text: "30"
+                  align: CENTER
+                  text_color: 0x0A84FF
+                  text_font: roboto_20
+              - label:
+                  text: "seconden resterend"
+                  align: BOTTOM_MID
+                  y: -180
+                  text_color: 0xFFFFFF
+                  text_font: roboto_16
 
