@@ -75,6 +75,7 @@ psram:
 
 # Required for online_image component
 http_request:
+  timeout: 10s
 
 # Buienradar image from converted PNG
 online_image:
