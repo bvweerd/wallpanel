@@ -40,7 +40,7 @@ wifi:
 
 esp32:
   board: esp32-p4-evboard
-  cpu_frequency: 400MHz
+  cpu_frequency: 360MHz
   flash_size: 16MB
   framework:
     type: esp-idf
@@ -623,9 +623,9 @@ number:
     optimistic: true
     id: display_timeout
     unit_of_measurement: "s"
-    initial_value: 90
+    initial_value: 20
     restore_value: true
-    min_value: 30
+    min_value: 10
     max_value: 180
     step: 5
     mode: box
@@ -741,7 +741,7 @@ output:
 
 # --- LVGL (Home Assistant Dark Theme) ---
 lvgl:
-  buffer_size: 12%  # Use internal RAM to prevent blank screen issues (PSRAM timing problems)
+  buffer_size: 100%  # Use internal RAM to prevent blank screen issues (PSRAM timing problems)
   byte_order: little_endian
   on_idle:
     timeout: !lambda "return (id(display_timeout).state * 1000);"
@@ -2413,9 +2413,9 @@ lvgl:
                   y: 120
                   width: 800
                   height: 40
-                  min_value: 30
+                  min_value: 10
                   max_value: 180
-                  value: 90
+                  value: 20
                   indicator:
                     bg_color: 0x0A84FF
                   knob:
@@ -2577,4 +2577,3 @@ lvgl:
                   y: -180
                   text_color: 0xFFFFFF
                   text_font: roboto_16
-
