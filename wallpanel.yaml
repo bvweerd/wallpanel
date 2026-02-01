@@ -18,7 +18,28 @@ esphome:
   on_boot:
     - priority: -100
       then:
-        - light.turn_on: backlight
+        - light.turn_on:
+            id: backlight
+            brightness: !lambda return id(display_brightness).state / 100.0;
+        # Update LVGL sliders/labels met opgeslagen waarden
+        - lvgl.slider.update:
+            id: brightness_slider
+            value: !lambda return id(display_brightness).state;
+        - lvgl.label.update:
+            id: brightness_value_label
+            text: !lambda |-
+              char buf[16];
+              snprintf(buf, sizeof(buf), "%.0f%%", id(display_brightness).state);
+              return buf;
+        - lvgl.slider.update:
+            id: timeout_slider
+            value: !lambda return id(display_timeout).state;
+        - lvgl.label.update:
+            id: timeout_value_label
+            text: !lambda |-
+              char buf[16];
+              snprintf(buf, sizeof(buf), "%.0fs", id(display_timeout).state);
+              return buf;
 
 api:
   encryption:
@@ -33,6 +54,16 @@ wifi:
 #  networks:
   ssid: !secret wifi_ssid
   password: !secret wifi_password
+  on_connect:
+    - logger.log: "WiFi connected, starting staggered image downloads..."
+    - delay: 5s
+    - script.execute: update_buienradar_script
+    - delay: 15s
+    - script.execute: update_other_images_script
+    - delay: 5s
+    - component.update: camera1_image
+    - delay: 2s
+    - component.update: camera2_image
 
   ap:
     ssid: ${device_name}
@@ -75,7 +106,7 @@ psram:
 
 # Required for online_image component
 http_request:
-  timeout: 10s
+  timeout: 5s
 
 # Buienradar image from converted PNG
 online_image:
@@ -85,77 +116,77 @@ online_image:
     byte_order: little_endian
     format: PNG
     resize: 314x220
-    update_interval: 2min  # Sync met HA updates (elke 5 min)
+    update_interval: never
   - url: http://192.168.2.2:8123/local/esphomefiles/buienradar_frame_2.png
     id: buienradar_frame_2
     type: RGB565
     byte_order: little_endian
     format: PNG
     resize: 314x220
-    update_interval: 2min  # Sync met HA updates (elke 5 min)
+    update_interval: never
   - url: http://192.168.2.2:8123/local/esphomefiles/buienradar_frame_3.png
     id: buienradar_frame_3
     type: RGB565
     byte_order: little_endian
     format: PNG
     resize: 314x220
-    update_interval: 2min  # Sync met HA updates (elke 5 min)
+    update_interval: never
   - url: http://192.168.2.2:8123/local/esphomefiles/buienradar_frame_4.png
     id: buienradar_frame_4
     type: RGB565
     byte_order: little_endian
     format: PNG
     resize: 314x220
-    update_interval: 2min  # Sync met HA updates (elke 5 min)
+    update_interval: never
   - url: http://192.168.2.2:8123/local/esphomefiles/buienradar_frame_5.png
     id: buienradar_frame_5
     type: RGB565
     byte_order: little_endian
     format: PNG
     resize: 314x220
-    update_interval: 2min  # Sync met HA updates (elke 5 min)
+    update_interval: never
   - url: http://192.168.2.2:8123/local/esphomefiles/buienradar_frame_6.png
     id: buienradar_frame_6
     type: RGB565
     byte_order: little_endian
     format: PNG
     resize: 314x220
-    update_interval: 2min  # Sync met HA updates (elke 5 min)
+    update_interval: never
   - url: http://192.168.2.2:8123/local/esphomefiles/buienradar_frame_7.png
     id: buienradar_frame_7
     type: RGB565
     byte_order: little_endian
     format: PNG
     resize: 314x220
-    update_interval: 2min  # Sync met HA updates (elke 5 min)
+    update_interval: never
   - url: http://192.168.2.2:8123/local/esphomefiles/buienradar_frame_8.png
     id: buienradar_frame_8
     type: RGB565
     byte_order: little_endian
     format: PNG
     resize: 314x220
-    update_interval: 2min  # Sync met HA updates (elke 5 min)
+    update_interval: never
   - url: http://192.168.2.2:8123/local/esphomefiles/buienradar_frame_9.png
     id: buienradar_frame_9
     type: RGB565
     byte_order: little_endian
     format: PNG
     resize: 314x220
-    update_interval: 2min  # Sync met HA updates (elke 5 min)
+    update_interval: never
   - url: http://192.168.2.2:8123/local/esphomefiles/buienradar_frame_10.png
     id: buienradar_frame_10
     type: RGB565
     byte_order: little_endian
     format: PNG
     resize: 314x220
-    update_interval: 2min  # Sync met HA updates (elke 5 min)
+    update_interval: never
   - url: http://192.168.2.2:8123/local/esphomefiles/energieprijzen.png
     id: energieprijzen_image
     type: RGB565
     byte_order: little_endian
     format: PNG
     resize: 648x50
-    update_interval: 5min
+    update_interval: never
     on_download_finished:
       - logger.log: "Energy price chart downloaded, updating widget"
       - lvgl.image.update:
@@ -169,7 +200,7 @@ online_image:
     byte_order: little_endian
     format: PNG
     resize: 314x220
-    update_interval: 5min
+    update_interval: never
     on_download_finished:
       - logger.log: "Agenda image downloaded, updating widget"
       - lvgl.image.update:
@@ -183,14 +214,14 @@ online_image:
     byte_order: little_endian
     format: PNG
     resize: 314x220
-    update_interval: 10s
+    update_interval: never
   - url: http://192.168.2.2:8123/local/esphomefiles/camera2.png
     id: camera2_image
     type: RGB565
     byte_order: little_endian
     format: PNG
     resize: 314x220
-    update_interval: 10s
+    update_interval: never
 
 time:
   - platform: homeassistant
@@ -214,187 +245,52 @@ time:
                   time.minute);
                 return buf;
 
-globals:
-  - id: buienradar_current_frame
-    type: int
-    restore_value: no
-    initial_value: '1'
-  - id: camera_current
-    type: int
-    restore_value: no
-    initial_value: '1'
-  - id: consumption_start
-    type: float
-    restore_value: yes
-    initial_value: '0.0'
-  - id: production_start
-    type: float
-    restore_value: yes
-    initial_value: '0.0'
-  - id: clean_mode_active
-    type: bool
-    restore_value: no
-    initial_value: 'false'
-  - id: clean_mode_countdown
-    type: int
-    restore_value: no
-    initial_value: '30'
-
 interval:
-  - interval: 60s
-    then:
-      - lvgl.label.update:
-          id: header_datetime
-          text: !lambda |-
-            static const char* dagen[] = {"Zondag", "Maandag", "Dinsdag", "Woensdag", "Donderdag", "Vrijdag", "Zaterdag"};
-            static const char* maanden[] = {"", "jan", "feb", "mrt", "apr", "mei", "jun", "jul", "aug", "sep", "okt", "nov", "dec"};
-            auto time = id(ha_time).now();
-            static char buf[100];
-            sprintf(buf, "%s %d %s %04d - %02d:%02d",
-              dagen[time.day_of_week - 1],
-              time.day_of_month,
-              maanden[time.month],
-              time.year,
-              time.hour,
-              time.minute);
-            return buf;
-  - interval: 1s
-    then:
-      - lambda: |-
-          if (id(clean_mode_active)) {
-            int countdown = id(clean_mode_countdown);
-            countdown--;
-            id(clean_mode_countdown) = countdown;
-
-            if (countdown <= 0) {
-              id(clean_mode_active) = false;
-              id(clean_mode_countdown) = 30;
-            }
-          }
-      - if:
-          condition:
-            lambda: 'return id(clean_mode_active);'
-          then:
-            - lvgl.widget.show: clean_mode_overlay
-            - lvgl.widget.show: clean_mode_overlay_settings
-            - lvgl.label.update:
-                id: clean_mode_timer
-                text: !lambda |-
-                  char buf[16];
-                  sprintf(buf, "%d", id(clean_mode_countdown));
-                  return buf;
-            - lvgl.label.update:
-                id: clean_mode_timer_settings
-                text: !lambda |-
-                  char buf[16];
-                  sprintf(buf, "%d", id(clean_mode_countdown));
-                  return buf;
-          else:
-            - lvgl.widget.hide: clean_mode_overlay
-            - lvgl.widget.hide: clean_mode_overlay_settings
+  # Buienradar animatie - cycle door frames elke 500ms
   - interval: 500ms
     then:
-      - lambda: |-
-          // Cycle through buienradar animation frames (1-10)
-          int frame = id(buienradar_current_frame);
-
-          // Increment frame, loop back to 1 after 10
-          frame++;
-          if (frame > 10) {
-            frame = 1;
-          }
-          id(buienradar_current_frame) = frame;
-      - if:
-          condition:
-            lambda: 'return id(buienradar_current_frame) == 1;'
-          then:
-            - lvgl.image.update:
-                id: buienradar_widget
-                src: buienradar_frame_1
-      - if:
-          condition:
-            lambda: 'return id(buienradar_current_frame) == 2;'
-          then:
-            - lvgl.image.update:
-                id: buienradar_widget
-                src: buienradar_frame_2
-      - if:
-          condition:
-            lambda: 'return id(buienradar_current_frame) == 3;'
-          then:
-            - lvgl.image.update:
-                id: buienradar_widget
-                src: buienradar_frame_3
-      - if:
-          condition:
-            lambda: 'return id(buienradar_current_frame) == 4;'
-          then:
-            - lvgl.image.update:
-                id: buienradar_widget
-                src: buienradar_frame_4
-      - if:
-          condition:
-            lambda: 'return id(buienradar_current_frame) == 5;'
-          then:
-            - lvgl.image.update:
-                id: buienradar_widget
-                src: buienradar_frame_5
-      - if:
-          condition:
-            lambda: 'return id(buienradar_current_frame) == 6;'
-          then:
-            - lvgl.image.update:
-                id: buienradar_widget
-                src: buienradar_frame_6
-      - if:
-          condition:
-            lambda: 'return id(buienradar_current_frame) == 7;'
-          then:
-            - lvgl.image.update:
-                id: buienradar_widget
-                src: buienradar_frame_7
-      - if:
-          condition:
-            lambda: 'return id(buienradar_current_frame) == 8;'
-          then:
-            - lvgl.image.update:
-                id: buienradar_widget
-                src: buienradar_frame_8
-      - if:
-          condition:
-            lambda: 'return id(buienradar_current_frame) == 9;'
-          then:
-            - lvgl.image.update:
-                id: buienradar_widget
-                src: buienradar_frame_9
-      - if:
-          condition:
-            lambda: 'return id(buienradar_current_frame) == 10;'
-          then:
-            - lvgl.image.update:
-                id: buienradar_widget
-                src: buienradar_frame_10
-  - interval: 5s
+      - lvgl.image.update:
+          id: buienradar_widget
+          src: !lambda |-
+            static int frame = 0;
+            frame = (frame + 1) % 10;
+            switch (frame) {
+              case 0: return id(buienradar_frame_1);
+              case 1: return id(buienradar_frame_2);
+              case 2: return id(buienradar_frame_3);
+              case 3: return id(buienradar_frame_4);
+              case 4: return id(buienradar_frame_5);
+              case 5: return id(buienradar_frame_6);
+              case 6: return id(buienradar_frame_7);
+              case 7: return id(buienradar_frame_8);
+              case 8: return id(buienradar_frame_9);
+              default: return id(buienradar_frame_10);
+            }
+  # Toggle camera display en download volgende camera (afwisselend)
+  - interval: 10s
     then:
+      - lvgl.image.update:
+          id: camera_widget
+          src: !lambda |-
+            static bool cam = false;
+            cam = !cam;
+            return cam ? id(camera1_image) : id(camera2_image);
+      # Download de ANDERE camera (die nu niet getoond wordt) voor volgende keer
+      - delay: 1s
       - lambda: |-
-          // Toggle between camera 1 and 2
-          int cam = id(camera_current);
-          cam = (cam == 1) ? 2 : 1;
-          id(camera_current) = cam;
-      - if:
-          condition:
-            lambda: 'return id(camera_current) == 1;'
-          then:
-            - lvgl.image.update:
-                id: camera_widget
-                src: camera1_image
-      - if:
-          condition:
-            lambda: 'return id(camera_current) == 2;'
-          then:
-            - lvgl.image.update:
-                id: camera_widget
-                src: camera2_image
+          static bool download_cam = false;
+          download_cam = !download_cam;
+          if (download_cam) {
+            id(camera1_image).update();
+          } else {
+            id(camera2_image).update();
+          }
+  # Update buienradar elke 5 minuten (staggered via script)
+  - interval: 5min
+    then:
+      - script.execute: update_buienradar_script
+      - delay: 30s
+      - script.execute: update_other_images_script
 
 sensor:
   - platform: homeassistant
@@ -640,6 +536,31 @@ number:
             snprintf(buf, sizeof(buf), "%.0fs", x);
             return buf;
 
+  - platform: template
+    name: Screen Brightness
+    optimistic: true
+    id: display_brightness
+    unit_of_measurement: "%"
+    initial_value: 50
+    restore_value: true
+    min_value: 10
+    max_value: 100
+    step: 5
+    mode: box
+    on_value:
+      - light.turn_on:
+          id: backlight
+          brightness: !lambda return x / 100.0;
+      - lvgl.slider.update:
+          id: brightness_slider
+          value: !lambda return x;
+      - lvgl.label.update:
+          id: brightness_value_label
+          text: !lambda |-
+            char buf[16];
+            snprintf(buf, sizeof(buf), "%.0f%%", x);
+            return buf;
+
 switch:
   - platform: template
     name: Screen Timeout Enabled
@@ -661,6 +582,72 @@ button:
   - platform: restart
     id: restart_button
     name: "Restart"
+
+script:
+  - id: countdown_script
+    parameters:
+      remaining: int
+    then:
+      - lvgl.label.update:
+          id: clean_mode_timer
+          text: !lambda return std::to_string(remaining);
+      - lvgl.label.update:
+          id: clean_mode_timer_settings
+          text: !lambda return std::to_string(remaining);
+      - if:
+          condition:
+            lambda: 'return remaining > 0;'
+          then:
+            - delay: 1s
+            - script.execute:
+                id: countdown_script
+                remaining: !lambda 'return remaining - 1;'
+          else:
+            - lvgl.widget.hide: clean_mode_overlay
+            - lvgl.widget.hide: clean_mode_overlay_settings
+
+  - id: clean_mode_script
+    mode: restart
+    then:
+      - lvgl.widget.show: clean_mode_overlay
+      - lvgl.widget.show: clean_mode_overlay_settings
+      - script.execute:
+          id: countdown_script
+          remaining: 30
+
+  - id: update_buienradar_script
+    mode: single
+    then:
+      - logger.log: "Updating buienradar frames (staggered)..."
+      - component.update: buienradar_frame_1
+      - delay: 1s
+      - component.update: buienradar_frame_2
+      - delay: 1s
+      - component.update: buienradar_frame_3
+      - delay: 1s
+      - component.update: buienradar_frame_4
+      - delay: 1s
+      - component.update: buienradar_frame_5
+      - delay: 1s
+      - component.update: buienradar_frame_6
+      - delay: 1s
+      - component.update: buienradar_frame_7
+      - delay: 1s
+      - component.update: buienradar_frame_8
+      - delay: 1s
+      - component.update: buienradar_frame_9
+      - delay: 1s
+      - component.update: buienradar_frame_10
+      - logger.log: "Buienradar update complete"
+
+  - id: update_other_images_script
+    mode: single
+    then:
+      - logger.log: "Updating other images (staggered)..."
+      - component.update: energieprijzen_image
+      - delay: 2s
+      - component.update: agenda_image
+      - logger.log: "Other images update complete"
 
 # -------------------------------
 # Fonts
@@ -2354,7 +2341,7 @@ lvgl:
             x: 20
             y: 80
             width: 984
-            height: 180
+            height: 260
             bg_color: ha_bg_card
             radius: 12
             border_width: 0
@@ -2431,11 +2418,47 @@ lvgl:
                           snprintf(buf, sizeof(buf), "%.0fs", x);
                           return buf;
 
+              # Brightness label
+              - label:
+                  text: "Helderheid"
+                  x: 60
+                  y: 170
+                  text_color: ha_text_secondary
+                  text_font: roboto_14
+
+              # Brightness value display
+              - label:
+                  id: brightness_value_label
+                  text: "50%"
+                  x: 880
+                  y: 170
+                  text_color: ha_text_primary
+                  text_font: roboto_16
+
+              # Brightness Slider
+              - slider:
+                  id: brightness_slider
+                  x: 60
+                  y: 200
+                  width: 800
+                  height: 40
+                  min_value: 10
+                  max_value: 100
+                  value: 50
+                  indicator:
+                    bg_color: 0xFFAA00
+                  knob:
+                    bg_color: 0xFFAA00
+                  on_release:
+                    - number.set:
+                        id: display_brightness
+                        value: !lambda return x;
+
         # Clean screen card
         - obj:
             id: settings_clean_screen_card
             x: 20
-            y: 280
+            y: 360
             width: 984
             height: 120
             bg_color: ha_bg_card
@@ -2476,18 +2499,15 @@ lvgl:
                         text_font: roboto_16
                   on_press:
                     - logger.log: "Clean mode activated"
-                    - lambda: |-
-                        id(clean_mode_active) = true;
-                        id(clean_mode_countdown) = 30;
-                    - lvgl.widget.show: clean_mode_overlay_settings
+                    - script.execute: clean_mode_script
 
         # System card
         - obj:
             id: settings_calibration_card
             x: 20
-            y: 420
+            y: 500
             width: 984
-            height: 180
+            height: 80
             bg_color: ha_bg_card
             radius: 12
             border_width: 0
@@ -2496,26 +2516,20 @@ lvgl:
               - image:
                   src: settings_menu
                   x: 20
-                  y: 20
+                  y: 25
                   image_recolor: ha_text_primary
                   image_recolor_opa: COVER
               - label:
                   text: "Systeem"
                   x: 60
-                  y: 20
+                  y: 28
                   text_color: ha_text_primary
                   text_font: roboto_20
-              - label:
-                  text: "Herstart het systeem als er problemen zijn met het touchscreen."
-                  x: 60
-                  y: 50
-                  text_color: ha_text_secondary
-                  text_font: roboto_14
               - button:
-                  x: 60
-                  y: 90
-                  width: 200
-                  height: 60
+                  x: 740
+                  y: 15
+                  width: 220
+                  height: 50
                   bg_color: 0xFF3B30
                   radius: 8
                   widgets:
@@ -2527,22 +2541,6 @@ lvgl:
                   on_press:
                     - logger.log: "Restarting ESP32"
                     - button.press: restart_button
-              - button:
-                  x: 280
-                  y: 90
-                  width: 280
-                  height: 60
-                  bg_color: 0x0A84FF
-                  radius: 8
-                  widgets:
-                    - label:
-                        text: "Terug naar hoofdscherm"
-                        align: CENTER
-                        text_color: 0xFFFFFF
-                        text_font: roboto_16
-                  on_press:
-                    - logger.log: "Back to coverpage"
-                    - lvgl.page.show: coverpage
 
         # ==================== CLEAN MODE OVERLAY (Settings page) ====================
         # Full screen overlay with countdown timer
