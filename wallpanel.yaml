@@ -54,6 +54,16 @@ wifi:
 #  networks:
   ssid: !secret wifi_ssid
   password: !secret wifi_password
+  on_connect:
+    - logger.log: "WiFi connected, starting staggered image downloads..."
+    - delay: 5s
+    - script.execute: update_buienradar_script
+    - delay: 15s
+    - script.execute: update_other_images_script
+    - delay: 5s
+    - component.update: camera1_image
+    - delay: 2s
+    - component.update: camera2_image
 
   ap:
     ssid: ${device_name}
@@ -96,7 +106,7 @@ psram:
 
 # Required for online_image component
 http_request:
-  timeout: 10s
+  timeout: 5s
 
 # Buienradar image from converted PNG
 online_image:
@@ -106,77 +116,77 @@ online_image:
     byte_order: little_endian
     format: PNG
     resize: 314x220
-    update_interval: 2min  # Sync met HA updates (elke 5 min)
+    update_interval: never
   - url: http://192.168.2.2:8123/local/esphomefiles/buienradar_frame_2.png
     id: buienradar_frame_2
     type: RGB565
     byte_order: little_endian
     format: PNG
     resize: 314x220
-    update_interval: 2min  # Sync met HA updates (elke 5 min)
+    update_interval: never
   - url: http://192.168.2.2:8123/local/esphomefiles/buienradar_frame_3.png
     id: buienradar_frame_3
     type: RGB565
     byte_order: little_endian
     format: PNG
     resize: 314x220
-    update_interval: 2min  # Sync met HA updates (elke 5 min)
+    update_interval: never
   - url: http://192.168.2.2:8123/local/esphomefiles/buienradar_frame_4.png
     id: buienradar_frame_4
     type: RGB565
     byte_order: little_endian
     format: PNG
     resize: 314x220
-    update_interval: 2min  # Sync met HA updates (elke 5 min)
+    update_interval: never
   - url: http://192.168.2.2:8123/local/esphomefiles/buienradar_frame_5.png
     id: buienradar_frame_5
     type: RGB565
     byte_order: little_endian
     format: PNG
     resize: 314x220
-    update_interval: 2min  # Sync met HA updates (elke 5 min)
+    update_interval: never
   - url: http://192.168.2.2:8123/local/esphomefiles/buienradar_frame_6.png
     id: buienradar_frame_6
     type: RGB565
     byte_order: little_endian
     format: PNG
     resize: 314x220
-    update_interval: 2min  # Sync met HA updates (elke 5 min)
+    update_interval: never
   - url: http://192.168.2.2:8123/local/esphomefiles/buienradar_frame_7.png
     id: buienradar_frame_7
     type: RGB565
     byte_order: little_endian
     format: PNG
     resize: 314x220
-    update_interval: 2min  # Sync met HA updates (elke 5 min)
+    update_interval: never
   - url: http://192.168.2.2:8123/local/esphomefiles/buienradar_frame_8.png
     id: buienradar_frame_8
     type: RGB565
     byte_order: little_endian
     format: PNG
     resize: 314x220
-    update_interval: 2min  # Sync met HA updates (elke 5 min)
+    update_interval: never
   - url: http://192.168.2.2:8123/local/esphomefiles/buienradar_frame_9.png
     id: buienradar_frame_9
     type: RGB565
     byte_order: little_endian
     format: PNG
     resize: 314x220
-    update_interval: 2min  # Sync met HA updates (elke 5 min)
+    update_interval: never
   - url: http://192.168.2.2:8123/local/esphomefiles/buienradar_frame_10.png
     id: buienradar_frame_10
     type: RGB565
     byte_order: little_endian
     format: PNG
     resize: 314x220
-    update_interval: 2min  # Sync met HA updates (elke 5 min)
+    update_interval: never
   - url: http://192.168.2.2:8123/local/esphomefiles/energieprijzen.png
     id: energieprijzen_image
     type: RGB565
     byte_order: little_endian
     format: PNG
     resize: 648x50
-    update_interval: 5min
+    update_interval: never
     on_download_finished:
       - logger.log: "Energy price chart downloaded, updating widget"
       - lvgl.image.update:
@@ -190,7 +200,7 @@ online_image:
     byte_order: little_endian
     format: PNG
     resize: 314x220
-    update_interval: 5min
+    update_interval: never
     on_download_finished:
       - logger.log: "Agenda image downloaded, updating widget"
       - lvgl.image.update:
@@ -204,14 +214,14 @@ online_image:
     byte_order: little_endian
     format: PNG
     resize: 314x220
-    update_interval: 10s
+    update_interval: never
   - url: http://192.168.2.2:8123/local/esphomefiles/camera2.png
     id: camera2_image
     type: RGB565
     byte_order: little_endian
     format: PNG
     resize: 314x220
-    update_interval: 10s
+    update_interval: never
 
 time:
   - platform: homeassistant
@@ -236,7 +246,28 @@ time:
                 return buf;
 
 interval:
-  - interval: 5s
+  # Buienradar animatie - cycle door frames elke 500ms
+  - interval: 500ms
+    then:
+      - lvgl.image.update:
+          id: buienradar_widget
+          src: !lambda |-
+            static int frame = 0;
+            frame = (frame + 1) % 10;
+            switch (frame) {
+              case 0: return id(buienradar_frame_1);
+              case 1: return id(buienradar_frame_2);
+              case 2: return id(buienradar_frame_3);
+              case 3: return id(buienradar_frame_4);
+              case 4: return id(buienradar_frame_5);
+              case 5: return id(buienradar_frame_6);
+              case 6: return id(buienradar_frame_7);
+              case 7: return id(buienradar_frame_8);
+              case 8: return id(buienradar_frame_9);
+              default: return id(buienradar_frame_10);
+            }
+  # Toggle camera display en download volgende camera (afwisselend)
+  - interval: 10s
     then:
       - lvgl.image.update:
           id: camera_widget
@@ -244,6 +275,22 @@ interval:
             static bool cam = false;
             cam = !cam;
             return cam ? id(camera1_image) : id(camera2_image);
+      # Download de ANDERE camera (die nu niet getoond wordt) voor volgende keer
+      - delay: 1s
+      - lambda: |-
+          static bool download_cam = false;
+          download_cam = !download_cam;
+          if (download_cam) {
+            id(camera1_image).update();
+          } else {
+            id(camera2_image).update();
+          }
+  # Update buienradar elke 5 minuten (staggered via script)
+  - interval: 5min
+    then:
+      - script.execute: update_buienradar_script
+      - delay: 30s
+      - script.execute: update_other_images_script
 
 sensor:
   - platform: homeassistant
@@ -567,6 +614,40 @@ script:
       - script.execute:
           id: countdown_script
           remaining: 30
+
+  - id: update_buienradar_script
+    mode: single
+    then:
+      - logger.log: "Updating buienradar frames (staggered)..."
+      - component.update: buienradar_frame_1
+      - delay: 1s
+      - component.update: buienradar_frame_2
+      - delay: 1s
+      - component.update: buienradar_frame_3
+      - delay: 1s
+      - component.update: buienradar_frame_4
+      - delay: 1s
+      - component.update: buienradar_frame_5
+      - delay: 1s
+      - component.update: buienradar_frame_6
+      - delay: 1s
+      - component.update: buienradar_frame_7
+      - delay: 1s
+      - component.update: buienradar_frame_8
+      - delay: 1s
+      - component.update: buienradar_frame_9
+      - delay: 1s
+      - component.update: buienradar_frame_10
+      - logger.log: "Buienradar update complete"
+
+  - id: update_other_images_script
+    mode: single
+    then:
+      - logger.log: "Updating other images (staggered)..."
+      - component.update: energieprijzen_image
+      - delay: 2s
+      - component.update: agenda_image
+      - logger.log: "Other images update complete"
 
 # -------------------------------
 # Fonts
@@ -1026,21 +1107,9 @@ lvgl:
             scrollbar_mode: "off"
             clip_corner: true
             widgets:
-              - animimg:
+              - image:
                   id: buienradar_widget
-                  src:
-                    - buienradar_frame_1
-                    - buienradar_frame_2
-                    - buienradar_frame_3
-                    - buienradar_frame_4
-                    - buienradar_frame_5
-                    - buienradar_frame_6
-                    - buienradar_frame_7
-                    - buienradar_frame_8
-                    - buienradar_frame_9
-                    - buienradar_frame_10
-                  duration: 5s
-                  repeat_count: 0
+                  src: buienradar_frame_1
                   align: CENTER
 
         # ==================== SHORTCUTS SECTION (50px) ====================
