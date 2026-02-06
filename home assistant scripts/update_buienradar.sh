@@ -30,29 +30,29 @@ curl -s -H "Authorization: Bearer $HA_TOKEN" \
 # Remove old frames from tmpfs
 rm -f /config/www/esphomefiles/buienradar_frame_*.png
 
-# Extract all frames from GIF and resize to 314x220 (to tmpfs)
-# The GIF typically has 10 frames showing radar movement
+# Extract 5 frames from GIF (every 2nd frame) and resize to 200x140 for better performance
+# Original GIF typically has 10 frames, we select frames 0,2,4,6,8 (becomes 1-5)
 ffmpeg -loglevel error -y -i /tmp/buienradar.gif \
-  -vf "scale=314:220" \
+  -vf "select='not(mod(n\,2))',scale=200:140" -vsync vfr \
   /config/www/esphomefiles/buienradar_frame_%d.png
 
 # Count number of frames extracted
 FRAME_COUNT=$(ls /config/www/esphomefiles/buienradar_frame_*.png 2>/dev/null | wc -l)
 
-# If less than 10 frames, duplicate the last frame to fill up to 10
-if [ $FRAME_COUNT -lt 10 ] && [ $FRAME_COUNT -gt 0 ]; then
-  echo "Only $FRAME_COUNT frames found, duplicating last frame to reach 10"
+# If less than 5 frames, duplicate the last frame to fill up to 5
+if [ $FRAME_COUNT -lt 5 ] && [ $FRAME_COUNT -gt 0 ]; then
+  echo "Only $FRAME_COUNT frames found, duplicating last frame to reach 5"
   LAST_FRAME="/config/www/esphomefiles/buienradar_frame_${FRAME_COUNT}.png"
-  for i in $(seq $((FRAME_COUNT + 1)) 10); do
+  for i in $(seq $((FRAME_COUNT + 1)) 5); do
     cp "$LAST_FRAME" "/config/www/esphomefiles/buienradar_frame_${i}.png"
   done
-  echo "Created 10 frames (${FRAME_COUNT} original + $((10 - FRAME_COUNT)) duplicates)"
+  echo "Created 5 frames (${FRAME_COUNT} original + $((5 - FRAME_COUNT)) duplicates)"
 elif [ $FRAME_COUNT -eq 0 ]; then
   echo "ERROR: No frames extracted from GIF!"
   exit 1
 else
-  echo "Extracted $FRAME_COUNT frames from buienradar GIF"
+  echo "Extracted $FRAME_COUNT frames from buienradar GIF (200x140)"
 fi
 
-echo "Buienradar frames updated (tmpfs)"
+echo "Buienradar frames updated (5 frames, 200x140)"
 exit 0

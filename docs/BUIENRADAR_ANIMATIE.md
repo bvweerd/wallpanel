@@ -14,46 +14,46 @@ De buienradar widget toont nu een geanimeerde radar in plaats van een statisch b
 
 ### Animatiesnelheid aanpassen
 
-In `wallpanel.yaml` (regel 263):
+In `wallpanel.yaml`:
 
 ```yaml
-- interval: 500ms  # Pas aan: 300ms = sneller, 1000ms = langzamer
+- interval: 1s  # Pas aan: 500ms = sneller, 2s = langzamer
 ```
 
 **Aanbevolen snelheden:**
-- **300ms**: Snelle animatie (3.3 frames/sec)
-- **500ms**: Normale animatie (2 frames/sec) - **standaard**
-- **1000ms**: Langzame animatie (1 frame/sec)
+- **500ms**: Snelle animatie (2 frames/sec)
+- **1s**: Normale animatie (1 frame/sec) - **standaard**
+- **2s**: Langzame animatie (0.5 frame/sec)
 
 ### Aantal frames
 
-Het script extraheert automatisch alle frames uit de GIF (meestal 10 stuks).
-
-Als je meer of minder frames wilt gebruiken, pas aan in `wallpanel.yaml`:
-
-1. Voeg meer `online_image` componenten toe (buienradar_frame_11, 12, etc.)
-2. Voeg meer cases toe in de switch statement (regel 270-301)
-3. Pas de max frame check aan (regel 305): `if (frame > 10)` → `if (frame > 15)`
+Het script extraheert 5 frames uit de GIF (elke 2e frame voor betere prestaties).
 
 ### Image formaat
 
-In `update_buienradar.sh` (regel 16):
+In `update_buienradar.sh`:
 
 ```bash
--vf "scale=314:220"  # Huidige formaat (past in card)
+-vf "select='not(mod(n\,2))',scale=200:140"  # 5 frames, 200x140 pixels
+```
+
+Om terug te gaan naar 10 frames van 314x220 (meer geheugen):
+```bash
+-vf "scale=314:220"  # Alle frames, origineel formaat
 ```
 
 ## Geheugengebruik
 
-**Let op**: Deze configuratie gebruikt meer geheugen omdat alle 10 frames in het ESP32 geheugen zitten.
+De huidige configuratie is geoptimaliseerd voor prestaties:
 
-**Geheugen per frame**: ~220KB (RGB565, 314x220 pixels)
-**Totaal**: ~2.2MB voor 10 frames
+**Geheugen per frame**: ~56KB (RGB565, 200x140 pixels)
+**Totaal**: ~280KB voor 5 frames
 
-Als je geheugenproblemen krijgt:
-1. Reduceer aantal frames (bijv. gebruik alleen frame 1,3,5,7,9)
-2. Verklein de image size: `scale=250:175`
-3. Gebruik RGB332 in plaats van RGB565 (lagere kwaliteit)
+Dit is een verbetering t.o.v. de oude configuratie (10 frames van 314x220 = 2.2MB).
+
+Als je nog meer geheugen wilt besparen:
+1. Gebruik RGB332 in plaats van RGB565 (lagere kwaliteit, halveert geheugen)
+2. Verklein verder naar 160x112
 
 ## Installatie
 
