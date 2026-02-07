@@ -2408,9 +2408,9 @@ lvgl:
         - obj:
             id: settings_screen_timeout_card
             x: 20
-            y: 80
+            y: 70
             width: 984
-            height: 240
+            height: 230
             bg_color: ha_bg_card
             radius: 12
             border_width: 0
@@ -2529,9 +2529,9 @@ lvgl:
         - obj:
             id: settings_clean_screen_card
             x: 20
-            y: 340
+            y: 310
             width: 984
-            height: 110
+            height: 90
             bg_color: ha_bg_card
             radius: 12
             border_width: 0
@@ -2557,9 +2557,9 @@ lvgl:
                   text_font: roboto_14
               - button:
                   x: 740
-                  y: 20
+                  y: 15
                   width: 220
-                  height: 80
+                  height: 60
                   bg_color: 0x0A84FF
                   radius: 8
                   widgets:
@@ -2579,9 +2579,9 @@ lvgl:
         - obj:
             id: settings_calibration_card
             x: 20
-            y: 465
+            y: 410
             width: 984
-            height: 80
+            height: 150
             bg_color: ha_bg_card
             radius: 12
             border_width: 0
@@ -2602,14 +2602,14 @@ lvgl:
               - label:
                   text: "Herstart het systeem als er problemen zijn met het touchscreen."
                   x: 60
-                  y: 50
+                  y: 45
                   text_color: ha_text_secondary
                   text_font: roboto_14
               - button:
                   x: 60
-                  y: 90
+                  y: 75
                   width: 200
-                  height: 60
+                  height: 55
                   bg_color: 0xFF3B30
                   radius: 8
                   widgets:
@@ -2623,9 +2623,9 @@ lvgl:
                     - button.press: restart_button
               - button:
                   x: 280
-                  y: 90
+                  y: 75
                   width: 280
-                  height: 60
+                  height: 55
                   bg_color: 0x0A84FF
                   radius: 8
                   widgets:
