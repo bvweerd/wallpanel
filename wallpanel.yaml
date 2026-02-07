@@ -18,7 +18,28 @@ esphome:
   on_boot:
     - priority: -100
       then:
-        - light.turn_on: backlight
+        - light.turn_on:
+            id: backlight
+            brightness: !lambda return id(display_brightness).state / 100.0;
+        # Update LVGL sliders/labels met opgeslagen waarden
+        - lvgl.slider.update:
+            id: brightness_slider
+            value: !lambda return id(display_brightness).state;
+        - lvgl.label.update:
+            id: brightness_value_label
+            text: !lambda |-
+              char buf[16];
+              snprintf(buf, sizeof(buf), "%.0f%%", id(display_brightness).state);
+              return buf;
+        - lvgl.slider.update:
+            id: timeout_slider
+            value: !lambda return id(display_timeout).state;
+        - lvgl.label.update:
+            id: timeout_value_label
+            text: !lambda |-
+              char buf[16];
+              snprintf(buf, sizeof(buf), "%.0fs", id(display_timeout).state);
+              return buf;
 
 api:
   encryption:
@@ -630,10 +651,10 @@ number:
     optimistic: true
     id: display_timeout
     unit_of_measurement: "s"
-    initial_value: 90
+    initial_value: 20
     restore_value: true
-    min_value: 30
-    max_value: 180
+    min_value: 5
+    max_value: 60
     step: 5
     mode: box
     on_value:
@@ -645,6 +666,31 @@ number:
           text: !lambda |-
             char buf[16];
             snprintf(buf, sizeof(buf), "%.0fs", x);
+            return buf;
+
+  - platform: template
+    name: Screen Brightness
+    optimistic: true
+    id: display_brightness
+    unit_of_measurement: "%"
+    initial_value: 50
+    restore_value: true
+    min_value: 10
+    max_value: 100
+    step: 5
+    mode: box
+    on_value:
+      - light.turn_on:
+          id: backlight
+          brightness: !lambda return x / 100.0;
+      - lvgl.slider.update:
+          id: brightness_slider
+          value: !lambda return x;
+      - lvgl.label.update:
+          id: brightness_value_label
+          text: !lambda |-
+            char buf[16];
+            snprintf(buf, sizeof(buf), "%.0f%%", x);
             return buf;
 
 switch:
@@ -2364,7 +2410,7 @@ lvgl:
             x: 20
             y: 80
             width: 984
-            height: 180
+            height: 240
             bg_color: ha_bg_card
             radius: 12
             border_width: 0
@@ -2410,7 +2456,7 @@ lvgl:
               # Current value display
               - label:
                   id: timeout_value_label
-                  text: "90s"
+                  text: "20s"
                   x: 880
                   y: 90
                   text_color: ha_text_primary
@@ -2420,12 +2466,13 @@ lvgl:
               - slider:
                   id: timeout_slider
                   x: 60
-                  y: 120
+                  y: 115
                   width: 800
-                  height: 40
-                  min_value: 30
-                  max_value: 180
-                  value: 90
+                  height: 30
+                  min_value: 5
+                  max_value: 60
+                  value: 20
+                  bg_color: 0x3A3A3C
                   indicator:
                     bg_color: 0x0A84FF
                   knob:
@@ -2441,13 +2488,50 @@ lvgl:
                           snprintf(buf, sizeof(buf), "%.0fs", x);
                           return buf;
 
+              # Brightness label
+              - label:
+                  text: "Helderheid"
+                  x: 60
+                  y: 155
+                  text_color: ha_text_secondary
+                  text_font: roboto_14
+
+              # Brightness value display
+              - label:
+                  id: brightness_value_label
+                  text: "50%"
+                  x: 880
+                  y: 155
+                  text_color: ha_text_primary
+                  text_font: roboto_16
+
+              # Brightness Slider
+              - slider:
+                  id: brightness_slider
+                  x: 60
+                  y: 180
+                  width: 800
+                  height: 30
+                  min_value: 10
+                  max_value: 100
+                  value: 50
+                  bg_color: 0x3A3A3C
+                  indicator:
+                    bg_color: 0xFFAA00
+                  knob:
+                    bg_color: 0xFFAA00
+                  on_release:
+                    - number.set:
+                        id: display_brightness
+                        value: !lambda return x;
+
         # Clean screen card
         - obj:
             id: settings_clean_screen_card
             x: 20
-            y: 280
+            y: 340
             width: 984
-            height: 120
+            height: 110
             bg_color: ha_bg_card
             radius: 12
             border_width: 0
@@ -2495,9 +2579,9 @@ lvgl:
         - obj:
             id: settings_calibration_card
             x: 20
-            y: 420
+            y: 465
             width: 984
-            height: 180
+            height: 80
             bg_color: ha_bg_card
             radius: 12
             border_width: 0
