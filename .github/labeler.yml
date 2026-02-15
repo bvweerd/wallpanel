@@ -1,0 +1,17 @@
+bug:
+  - '(?i)(bug|error|not working|wrong|incorrect|fout|klopt niet|werkt niet)'
+
+enhancement:
+  - '(?i)(feature|enhancement|add|improve|support|request|suggestie)'
+
+question:
+  - '(?i)(question|vraag|how to|hoe|what is|help|explain|why)'
+
+documentation:
+  - '(?i)(docs|documentation|readme|example|guide|uitleg)'
+
+"home assistant":
+  - '(?i)(home assistant|hass|automation|automatie|homeassistant)'
+
+configuration:
+  - '(?i)(config|setup|install|yaml|options|settings|configure)'

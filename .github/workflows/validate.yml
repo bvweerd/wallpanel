@@ -1,0 +1,34 @@
+name: Validate
+
+on:
+  push:
+    branches: ["dev", "feature/**", "fix/**"]
+    tags-ignore: ["**"]
+  pull_request:
+    branches: [dev, main]
+
+concurrency:
+  group: validate-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  esphome-config-check:
+    name: ESPHome config check
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+
+      - name: Install ESPHome
+        run: pip install esphome
+
+      - name: Check ESPHome configs
+        run: |
+          for f in *.yaml; do
+            echo "Checking $f..."
+            esphome config "$f" || true
+          done

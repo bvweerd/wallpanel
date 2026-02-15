@@ -1,0 +1,45 @@
+name: Release
+
+on:
+  push:
+    tags: ["v*.*.*"]
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    name: Create release
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Create config ZIP
+        run: zip -r wallpanel-config.zip *.yaml fonts/ images/ 2>/dev/null || zip -r wallpanel-config.zip *.yaml
+
+      - name: Generate changelog
+        id: changelog
+        uses: mikepenz/release-changelog-builder-action@v5
+        with:
+          configuration: |
+            {
+              "categories": [
+                { "title": "## ✨ Nieuwe features", "labels": ["enhancement"] },
+                { "title": "## 🐛 Bug fixes", "labels": ["bug"] },
+                { "title": "## 🔧 Overig", "labels": [] }
+              ]
+            }
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: wallpanel-config.zip
+          body: |
+            ## Installatie
+            Download \`wallpanel-config.zip\` en pak de inhoud uit in je ESPHome configuratiemap.
+
+            ${{ steps.changelog.outputs.changelog }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
