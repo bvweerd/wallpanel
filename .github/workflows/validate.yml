@@ -11,6 +11,9 @@ concurrency:
   group: validate-${{ github.ref }}
   cancel-in-progress: true
 
+permissions:
+  contents: read
+
 jobs:
   esphome-config-check:
     name: ESPHome config check
