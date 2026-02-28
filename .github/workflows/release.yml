@@ -24,9 +24,9 @@ jobs:
           configuration: |
             {
               "categories": [
-                { "title": "## ✨ Nieuwe features", "labels": ["enhancement"] },
+                { "title": "## ✨ New features", "labels": ["enhancement"] },
                 { "title": "## 🐛 Bug fixes", "labels": ["bug"] },
-                { "title": "## 🔧 Overig", "labels": [] }
+                { "title": "## 🔧 Other", "labels": [] }
               ]
             }
         env:
@@ -37,8 +37,8 @@ jobs:
         with:
           files: wallpanel-config.zip
           body: |
-            ## Installatie
-            Download \`wallpanel-config.zip\` en pak de inhoud uit in je ESPHome configuratiemap.
+            ## Installation
+            Download \`wallpanel-config.zip\` and extract the contents to your ESPHome configuration directory.
 
             ${{ steps.changelog.outputs.changelog }}
         env:

@@ -1,17 +1,17 @@
 bug:
-  - '(?i)(bug|error|not working|wrong|incorrect|fout|klopt niet|werkt niet)'
+  - '(?i)(bug|error|not working|wrong|incorrect|broken)'
 
 enhancement:
-  - '(?i)(feature|enhancement|add|improve|support|request|suggestie)'
+  - '(?i)(feature|enhancement|add|improve|support|request|suggestion)'
 
 question:
-  - '(?i)(question|vraag|how to|hoe|what is|help|explain|why)'
+  - '(?i)(question|how to|what is|help|explain|why)'
 
 documentation:
-  - '(?i)(docs|documentation|readme|example|guide|uitleg)'
+  - '(?i)(docs|documentation|readme|example|guide)'
 
 "home assistant":
-  - '(?i)(home assistant|hass|automation|automatie|homeassistant)'
+  - '(?i)(home assistant|hass|automation|homeassistant)'
 
 configuration:
   - '(?i)(config|setup|install|yaml|options|settings|configure)'
