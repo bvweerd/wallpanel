@@ -13,8 +13,7 @@ from PIL import Image, ImageDraw, ImageFont
 # Configuration
 WIDTH = 648  # 2 cards width (314 + 20 + 314)
 HEIGHT = 50  # Top bar height
-BAR_HEIGHT = 18
-LABEL_HEIGHT = 12  # Height for hour labels
+BAR_HEIGHT = 21  # Half height, room for axis labels below
 LEFT_MARGIN = 8  # Left margin to prevent label cutoff
 RIGHT_MARGIN = 8  # Right margin
 OUTPUT_PATH = '/config/www/esphomefiles/energieprijzen.png'
@@ -28,14 +27,22 @@ COLOR_BG = (26, 26, 28)       # #1A1A1C background
 COLOR_TEXT = (156, 163, 175)  # #9CA3AF gray text for labels
 
 def get_font(size=10):
-    """Get font for labels. Try to use system font, fallback to default."""
-    try:
-        return ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf", size)
-    except:
+    """Get font. Try to use system font, fallback to default."""
+    font_paths = [
+        "/config/fonts/DejaVuSans.ttf",  # Custom font location in Home Assistant
+        "/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf",
+        "/usr/share/fonts/TTF/DejaVuSans.ttf",
+        "/usr/share/fonts/truetype/liberation/LiberationSans-Regular.ttf",
+        "/usr/share/fonts/liberation/LiberationSans-Regular.ttf",
+        "/System/Library/Fonts/Helvetica.ttc",
+        "/usr/share/fonts/truetype/noto/NotoSans-Regular.ttf",
+    ]
+    for font_path in font_paths:
         try:
-            return ImageFont.truetype("/usr/share/fonts/TTF/DejaVuSans.ttf", size)
+            return ImageFont.truetype(font_path, size)
         except:
-            return ImageFont.load_default()
+            continue
+    return ImageFont.load_default()
 
 def get_sensor_data():
     """Read sensor data from stdin (passed by HA automation)."""
@@ -92,8 +99,8 @@ def generate_image(sensor_data):
         img = Image.new('RGB', (WIDTH, HEIGHT), COLOR_BG)
         return img
 
-    # Calculate percentiles for color coding
-    values = sorted([p['value'] for p in visible])
+    # Calculate percentiles over all available data (not just visible window)
+    values = sorted([p['value'] for p in all_prices if isinstance(p.get('value'), (int, float))])
     n = len(values)
     p20 = values[int(0.20 * (n - 1))]
     p80 = values[int(0.80 * (n - 1))]
@@ -109,7 +116,6 @@ def generate_image(sensor_data):
     # Create image
     img = Image.new('RGB', (WIDTH, HEIGHT), COLOR_BG)
     draw = ImageDraw.Draw(img)
-    font = get_font(9)
 
     # Calculate bar width (using available width minus margins)
     num_bars = len(visible)
@@ -117,8 +123,18 @@ def generate_image(sensor_data):
     bar_width = available_width / num_bars  # Use float for precise positioning
     gap = 1
 
-    # Draw bars (positioned to leave room for labels below)
-    y_offset = 8  # Top margin
+    y_offset = 4  # top margin, leaves room for axis labels below
+
+    # Build color segments (contiguous runs of the same color)
+    colors = [color_for(p['value']) for p in visible]
+    segments = []
+    seg_start = 0
+    for i in range(1, num_bars + 1):
+        if i == num_bars or colors[i] != colors[seg_start]:
+            segments.append({'start': seg_start, 'end': i - 1, 'color': colors[seg_start]})
+            seg_start = i
+
+    # Draw bars first, then labels on top
     for i, price in enumerate(visible):
         x = LEFT_MARGIN + int(i * bar_width)
         x_end = LEFT_MARGIN + int((i + 1) * bar_width) - gap
@@ -128,20 +144,39 @@ def generate_image(sensor_data):
             fill=color
         )
 
-    # Draw hour labels below bars
-    # Show label on every whole hour (minute == 0)
+    # Draw time-range labels centered inside colored segments
+    for seg in segments:
+        if seg['color'] == COLOR_MID:
+            continue
+        seg_left_px = LEFT_MARGIN + int(seg['start'] * bar_width)
+        seg_right_px = LEFT_MARGIN + int((seg['end'] + 1) * bar_width)
+        seg_width_px = seg_right_px - seg_left_px
+
+        start_h = visible[seg['start']]['start'].hour
+        end_h = (visible[seg['end']]['start'] + timedelta(hours=1)).hour
+        label = f"{start_h}-{end_h}"
+
+        f = get_font(21)
+        bbox = draw.textbbox((0, 0), label, font=f)
+        text_w = bbox[2] - bbox[0]
+        text_h = bbox[3] - bbox[1]
+
+        text_x = seg_left_px + (seg_width_px - text_w) // 2
+        # Subtract bbox[1] to correct for ascender offset so text is truly centered
+        text_y = y_offset + (BAR_HEIGHT - text_h) // 2 - bbox[1]
+        draw.text((text_x, text_y), label, fill=(10, 10, 10), font=f)
+
+    # Draw hour axis labels below bar (every whole hour)
+    axis_font = get_font(10)
     label_y = y_offset + BAR_HEIGHT + 3
     for i, price in enumerate(visible):
-        minute = price['start'].minute
-        # Show label if this is a whole hour
-        if minute == 0:
+        if price['start'].minute == 0:
             hour_str = f"{price['start'].hour:02d}"
             x = LEFT_MARGIN + int((i + 0.5) * bar_width)
-            # Center text at x position
-            bbox = draw.textbbox((0, 0), hour_str, font=font)
+            bbox = draw.textbbox((0, 0), hour_str, font=axis_font)
             text_width = bbox[2] - bbox[0]
             draw.text((x - text_width // 2, label_y), hour_str,
-                     fill=COLOR_TEXT, font=font)
+                     fill=COLOR_TEXT, font=axis_font)
 
     # Debug: print current time and visible range
     print(f"Current time: {now.strftime('%Y-%m-%d %H:%M:%S %Z')}", file=sys.stderr)
