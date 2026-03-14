@@ -87,7 +87,9 @@ def generate_image(sensor_data):
     visible = []
     for item in all_prices:
         start = datetime.fromisoformat(item['start'].replace('Z', '+00:00'))
-        # Convert to local timezone for comparison
+        # If no timezone info, assume already Amsterdam local time
+        if start.tzinfo is None:
+            start = start.replace(tzinfo=local_tz)
         start_local = start.astimezone(local_tz)
         if win_start <= start_local <= win_end:
             visible.append({
@@ -172,17 +174,11 @@ def generate_image(sensor_data):
     for i, price in enumerate(visible):
         if price['start'].minute == 0:
             hour_str = f"{price['start'].hour:02d}"
-            x = LEFT_MARGIN + int((i + 0.5) * bar_width)
+            x = LEFT_MARGIN + int(i * bar_width)
             bbox = draw.textbbox((0, 0), hour_str, font=axis_font)
             text_width = bbox[2] - bbox[0]
             draw.text((x - text_width // 2, label_y), hour_str,
                      fill=COLOR_TEXT, font=axis_font)
-
-    # Debug: print current time and visible range
-    print(f"Current time: {now.strftime('%Y-%m-%d %H:%M:%S %Z')}", file=sys.stderr)
-    if visible:
-        print(f"First visible: {visible[0]['start'].strftime('%Y-%m-%d %H:%M:%S %Z')}", file=sys.stderr)
-        print(f"Last visible: {visible[-1]['start'].strftime('%Y-%m-%d %H:%M:%S %Z')}", file=sys.stderr)
 
     # Find current hour position
     current_idx = 0
@@ -196,8 +192,6 @@ def generate_image(sensor_data):
         if now >= visible[-1]['start']:
             current_idx = len(visible) - 1
 
-    print(f"Current index: {current_idx}, time: {visible[current_idx]['start'].strftime('%H:%M')}", file=sys.stderr)
-
     # Calculate exact position within hour
     if current_idx + 1 < len(visible):
         next_time = visible[current_idx + 1]['start']
@@ -205,7 +199,6 @@ def generate_image(sensor_data):
         hour_duration = (next_time - curr_time).total_seconds()
         elapsed = (now - curr_time).total_seconds()
         within_frac = min(1.0, max(0.0, elapsed / hour_duration))
-        print(f"Within hour: {within_frac:.2f} ({elapsed:.0f}s / {hour_duration:.0f}s)", file=sys.stderr)
     else:
         within_frac = 0.5
 
