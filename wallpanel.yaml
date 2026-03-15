@@ -191,6 +191,20 @@ online_image:
           src: energieprijzen_image
       - lvgl.widget.redraw:
           id: energieprijzen_widget
+  - url: http://192.168.2.2:8123/local/esphomefiles/energiegrafiek.png
+    id: energiegrafiek_image
+    type: RGB565
+    byte_order: little_endian
+    format: PNG
+    resize: 984x480
+    update_interval: 15min
+    on_download_finished:
+      - logger.log: "Energiegrafiek downloaded, updating widget"
+      - lvgl.image.update:
+          id: energiegrafiek_widget
+          src: energiegrafiek_image
+      - lvgl.widget.redraw:
+          id: energiegrafiek_widget
   - url: http://192.168.2.2:8123/local/esphomefiles/agenda.png
     id: agenda_image
     type: RGB565
@@ -851,12 +865,24 @@ lvgl:
 
         # Energy price chart (right-aligned, 2 cards width = 648px)
         # Position: 1024 - 648 - 20 (margin) = 356
-        - image:
-            id: energieprijzen_widget
-            src: energieprijzen_image
+        - button:
+            id: energieprijzen_btn
             x: 356
             y: 0
+            width: 648
+            height: 50
             align: TOP_LEFT
+            bg_opa: TRANSP
+            border_width: 0
+            shadow_width: 0
+            pad_all: 0
+            on_press:
+              - lvgl.page.show: page_energiegrafiek
+            widgets:
+              - image:
+                  id: energieprijzen_widget
+                  src: energieprijzen_image
+                  align: TOP_LEFT
 
         # ==================== MAIN CARDS / WIDGETS SECTION (500px) ====================
         # Row 1 - Y: 70 - Climate, Cameras, Agenda (20px margin from header)
@@ -2671,4 +2697,44 @@ lvgl:
                   y: -180
                   text_color: 0xFFFFFF
                   text_font: roboto_16
+
+    # ==================== PAGE: ENERGIEGRAFIEK ====================
+    - id: page_energiegrafiek
+      bg_color: ha_bg_primary
+      widgets:
+        # Title
+        - label:
+            text: "Elektriciteitsprijs & Batterij"
+            x: 20
+            y: 12
+            text_color: ha_text_primary
+            text_font: roboto_20
+
+        # Chart image (984x480, full usable width)
+        - image:
+            id: energiegrafiek_widget
+            src: energiegrafiek_image
+            x: 20
+            y: 50
+            align: TOP_LEFT
+
+        # Sluiten button
+        - button:
+            id: btn_energiegrafiek_sluiten
+            align: BOTTOM_MID
+            y: -15
+            width: 200
+            height: 50
+            bg_color: ha_bg_card
+            radius: 8
+            border_width: 0
+            shadow_width: 0
+            widgets:
+              - label:
+                  text: "Sluiten"
+                  align: CENTER
+                  text_color: ha_text_primary
+                  text_font: roboto_16
+            on_press:
+              - lvgl.page.show: coverpage
 
