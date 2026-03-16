@@ -225,10 +225,11 @@ def draw_chart(data):
     nordpool      = parse_price_series(np_attrs,  'raw_today',        'raw_tomorrow')
     teruglevering = parse_price_series(tl_attrs,  'net_prices_today', 'net_prices_tomorrow')
 
-    bat_starts = bat_attrs.get('step_start_times_iso') or []
-    bat_power  = parse_battery_series(bat_starts, bat_attrs.get('power_schedule_kw'),        local_tz)
-    bat_soc    = parse_battery_series(bat_starts, bat_attrs.get('soc_schedule_kwh'),         local_tz)
-    predicted  = parse_battery_series(bat_starts, bat_attrs.get('price_forecast_predicted'), local_tz)
+    bat_starts    = bat_attrs.get('step_start_times_iso') or []
+    bat_power     = parse_battery_series(bat_starts, bat_attrs.get('power_schedule_kw'),                local_tz)
+    bat_soc       = parse_battery_series(bat_starts, bat_attrs.get('soc_schedule_kwh'),                 local_tz)
+    predicted     = parse_battery_series(bat_starts, bat_attrs.get('grid_price_forecast_predicted'),    local_tz)
+    feed_in_pred  = parse_battery_series(bat_starts, bat_attrs.get('feed_in_price_forecast_predicted'), local_tz)
 
     font    = get_font(14)
     font_sm = get_font(12)
@@ -278,6 +279,10 @@ def draw_chart(data):
     if len(predicted) >= 2:
         t = [p for p, _ in predicted]; v = [x for _, x in predicted]
         draw_dashed_step_line(draw, t, v, C_PREDICTED, tx, ty1, lw=2)
+
+    if len(feed_in_pred) >= 2:
+        t = [p for p, _ in feed_in_pred]; v = [x for _, x in feed_in_pred]
+        draw_dashed_step_line(draw, t, v, C_TERUGLEVERING, tx, ty1, lw=2)
 
     if len(bat_soc) >= 2:
         t = [p for p, _ in bat_soc]; v = [x for _, x in bat_soc]
@@ -334,11 +339,13 @@ def draw_chart(data):
     ]
     extra = []
     if len(predicted) >= 2:
-        extra.append((C_PREDICTED, True,  "Predicted"))
+        extra.append((C_PREDICTED,     True,  "Grid forecast"))
+    if len(feed_in_pred) >= 2:
+        extra.append((C_TERUGLEVERING, True,  "Feed-in forecast"))
     if len(bat_power) >= 2:
-        extra.append((C_BAT_POWER, False, "Bat. kW"))
+        extra.append((C_BAT_POWER,     False, "Bat. kW"))
     if len(bat_soc) >= 2:
-        extra.append((C_BAT_SOC,   True,  "Bat. SoC"))
+        extra.append((C_BAT_SOC,       True,  "Bat. SoC"))
 
     def draw_legend_row(items, y_row):
         if not items:
