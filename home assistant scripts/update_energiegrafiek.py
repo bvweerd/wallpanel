@@ -78,7 +78,18 @@ def get_local_tz():
         return pytz.timezone('Europe/Amsterdam')
 
 
-def parse_price_series(attrs, today_key, tomorrow_key):
+def parse_timestamp(raw_t, local_tz):
+    if isinstance(raw_t, (int, float)):
+        return datetime.fromtimestamp(raw_t / 1000, tz=timezone.utc).astimezone(local_tz)
+
+    ts = datetime.fromisoformat(str(raw_t).replace('Z', '+00:00'))
+    if ts.tzinfo is None:
+        # Home Assistant attribute lists often use local clock times without an offset.
+        return ts.replace(tzinfo=local_tz)
+    return ts.astimezone(local_tz)
+
+
+def parse_price_series(attrs, today_key, tomorrow_key, local_tz):
     today    = attrs.get(today_key)    or []
     tomorrow = attrs.get(tomorrow_key) or []
     result = []
@@ -90,12 +101,7 @@ def parse_price_series(attrs, today_key, tomorrow_key):
         if raw_t is None:
             continue
         try:
-            if isinstance(raw_t, (int, float)):
-                ts = datetime.fromtimestamp(raw_t / 1000, tz=timezone.utc)
-            else:
-                ts = datetime.fromisoformat(str(raw_t).replace('Z', '+00:00'))
-            if ts.tzinfo is None:
-                ts = ts.replace(tzinfo=timezone.utc)
+            ts = parse_timestamp(raw_t, local_tz)
             result.append((ts, float(raw_v)))
         except Exception:
             continue
@@ -107,11 +113,7 @@ def parse_battery_series(starts_raw, values_raw, local_tz):
     result = []
     for s, v in zip(starts_raw or [], values_raw or []):
         try:
-            ts = datetime.fromisoformat(str(s).replace('Z', '+00:00'))
-            # Strip any fixed offset and treat as Amsterdam local time.
-            # Battery optimizers often use a hardcoded +01:00 that doesn't
-            # update after DST, causing a 1-hour shift in summer.
-            ts = ts.replace(tzinfo=None).replace(tzinfo=local_tz)
+            ts = parse_timestamp(s, local_tz)
             result.append((ts, float(v)))
         except Exception:
             continue
@@ -223,9 +225,9 @@ def draw_chart(data):
     tl_attrs   = data.get('teruglevering') or {}
     bat_attrs  = data.get('battery')       or {}
 
-    levering      = parse_price_series(lev_attrs, 'net_prices_today', 'net_prices_tomorrow')
-    nordpool      = parse_price_series(np_attrs,  'raw_today',        'raw_tomorrow')
-    teruglevering = parse_price_series(tl_attrs,  'net_prices_today', 'net_prices_tomorrow')
+    levering      = parse_price_series(lev_attrs, 'net_prices_today', 'net_prices_tomorrow', local_tz)
+    nordpool      = parse_price_series(np_attrs,  'raw_today',        'raw_tomorrow',        local_tz)
+    teruglevering = parse_price_series(tl_attrs,  'net_prices_today', 'net_prices_tomorrow', local_tz)
 
     bat_starts    = bat_attrs.get('step_start_times_iso') or []
     bat_power     = parse_battery_series(bat_starts, bat_attrs.get('power_schedule_kw'),                local_tz)
