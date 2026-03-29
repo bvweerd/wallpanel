@@ -108,9 +108,11 @@ def parse_battery_series(starts_raw, values_raw, local_tz):
     for s, v in zip(starts_raw or [], values_raw or []):
         try:
             ts = datetime.fromisoformat(str(s).replace('Z', '+00:00'))
-            if ts.tzinfo is None:
-                ts = ts.replace(tzinfo=timezone.utc)
-            result.append((ts.astimezone(local_tz), float(v)))
+            # Strip any fixed offset and treat as Amsterdam local time.
+            # Battery optimizers often use a hardcoded +01:00 that doesn't
+            # update after DST, causing a 1-hour shift in summer.
+            ts = ts.replace(tzinfo=None).replace(tzinfo=local_tz)
+            result.append((ts, float(v)))
         except Exception:
             continue
     result.sort(key=lambda x: x[0])

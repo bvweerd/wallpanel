@@ -166,7 +166,7 @@ def generate_image(sensor_data):
         text_x = seg_left_px + (seg_width_px - text_w) // 2
         # Subtract bbox[1] to correct for ascender offset so text is truly centered
         text_y = y_offset + (BAR_HEIGHT - text_h) // 2 - bbox[1]
-        draw.text((text_x, text_y), label, fill=(10, 10, 10), font=f)
+        draw.text((text_x, text_y), label, fill=(255, 255, 255), font=f)
 
     # Draw hour axis labels below bar (every whole hour)
     axis_font = get_font(10)

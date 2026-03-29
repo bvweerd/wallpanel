@@ -81,11 +81,6 @@ esp32:
 logger:
   hardware_uart: USB_SERIAL_JTAG
 
-# Not Needed?                                          
-#external_components:  
-#  - source: github://esphome/esphome@2025.7.1
-#    components: [i2c]
-
 esp32_hosted:
   variant: esp32c6
   active_high: true
@@ -105,6 +100,8 @@ psram:
 http_request:
   timeout: 10s
 
+debug:
+
 # Buienradar image from converted PNG
 online_image:
   - url: http://192.168.2.2:8123/local/esphomefiles/buienradar_frame_1.png
@@ -120,28 +117,28 @@ online_image:
     byte_order: little_endian
     format: PNG
     resize: 314x220
-    update_interval: 5min  # Sync met HA updates (elke 5 min)
+    update_interval: 303s  # Gespreid: 5min + 3s
   - url: http://192.168.2.2:8123/local/esphomefiles/buienradar_frame_3.png
     id: buienradar_frame_3
     type: RGB565
     byte_order: little_endian
     format: PNG
     resize: 314x220
-    update_interval: 5min  # Sync met HA updates (elke 5 min)
+    update_interval: 306s  # Gespreid: 5min + 6s
   - url: http://192.168.2.2:8123/local/esphomefiles/buienradar_frame_4.png
     id: buienradar_frame_4
     type: RGB565
     byte_order: little_endian
     format: PNG
     resize: 314x220
-    update_interval: 5min  # Sync met HA updates (elke 5 min)
+    update_interval: 309s  # Gespreid: 5min + 9s
   - url: http://192.168.2.2:8123/local/esphomefiles/buienradar_frame_5.png
     id: buienradar_frame_5
     type: RGB565
     byte_order: little_endian
     format: PNG
     resize: 314x220
-    update_interval: 5min  # Sync met HA updates (elke 5 min)
+    update_interval: 312s  # Gespreid: 5min + 12s
   # - url: http://192.168.2.2:8123/local/esphomefiles/buienradar_frame_6.png
   #   id: buienradar_frame_6
   #   type: RGB565
@@ -219,18 +216,18 @@ online_image:
           src: agenda_image
       - lvgl.widget.redraw:
           id: agenda_widget
-  - url: http://192.168.2.2:8123/local/esphomefiles/camera1.png
+  - url: http://192.168.2.2:8123/local/esphomefiles/camera1.jpg
     id: camera1_image
     type: RGB565
     byte_order: little_endian
-    format: PNG
+    format: JPEG
     resize: 314x220
     update_interval: 10s
-  - url: http://192.168.2.2:8123/local/esphomefiles/camera2.png
+  - url: http://192.168.2.2:8123/local/esphomefiles/camera2.jpg
     id: camera2_image
     type: RGB565
     byte_order: little_endian
-    format: PNG
+    format: JPEG
     resize: 314x220
     update_interval: 15s
 
@@ -439,6 +436,21 @@ interval:
                 src: camera2_image
 
 sensor:
+  - platform: debug
+    free:
+      name: "Free Heap"
+
+  - platform: debug
+    block:
+      name: "Heap Block"
+
+  - platform: debug
+    loop_time:
+      name: "Loop Time"
+
+  - platform: uptime
+    name: "Uptime"
+
   - platform: homeassistant
     id: indoor_temperature
     entity_id: sensor.indoor_temperature
@@ -617,6 +629,23 @@ sensor:
               return buf;
 
 text_sensor:
+  - platform: template
+    name: "Reset Reason"
+    lambda: |-
+      switch (esp_reset_reason()) {
+        case ESP_RST_POWERON: return std::string("POWERON");
+        case ESP_RST_EXT: return std::string("EXT_RESET");
+        case ESP_RST_SW: return std::string("SOFTWARE");
+        case ESP_RST_PANIC: return std::string("PANIC");
+        case ESP_RST_INT_WDT: return std::string("INT_WDT");
+        case ESP_RST_TASK_WDT: return std::string("TASK_WDT");
+        case ESP_RST_WDT: return std::string("WDT");
+        case ESP_RST_DEEPSLEEP: return std::string("DEEPSLEEP");
+        case ESP_RST_BROWNOUT: return std::string("BROWNOUT");
+        case ESP_RST_SDIO: return std::string("SDIO");
+        default: return std::string("UNKNOWN");
+      }
+
   - platform: homeassistant
     id: thermostaat_mode
     entity_id: input_select.thermostaat_mode

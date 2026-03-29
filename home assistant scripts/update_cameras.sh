@@ -33,15 +33,17 @@ curl -s -H "Authorization: Bearer $HA_TOKEN" \
   "$HA_URL/api/camera_proxy/camera.camera_oprit_snapshots_sub" \
   -o /tmp/camera2_temp.jpg
 
-# Convert and resize camera 1 to PNG (to tmpfs)
+# Resize camera 1 and save as JPEG
 ffmpeg -loglevel error -y -i /tmp/camera1_temp.jpg \
   -vf "scale=314:220" \
-  /config/www/esphomefiles/camera1.png
+  -q:v 5 \
+  /config/www/esphomefiles/camera1.jpg
 
-# Convert and resize camera 2 to PNG (to tmpfs)
+# Resize camera 2 and save as JPEG
 ffmpeg -loglevel error -y -i /tmp/camera2_temp.jpg \
   -vf "scale=314:220" \
-  /config/www/esphomefiles/camera2.png
+  -q:v 5 \
+  /config/www/esphomefiles/camera2.jpg
 
 echo "Camera snapshots updated (tmpfs)"
 exit 0
