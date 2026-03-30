@@ -53,6 +53,13 @@ def get_sensor_data():
         # Fallback: return empty structure
         return {'net_prices_today': [], 'net_prices_tomorrow': []}
 
+def parse_local_timestamp(raw_ts, local_tz):
+    """Parse an ISO timestamp and convert it to Europe/Amsterdam."""
+    ts = datetime.fromisoformat(raw_ts.replace('Z', '+00:00'))
+    if ts.tzinfo is None:
+        return ts.replace(tzinfo=local_tz)
+    return ts.astimezone(local_tz)
+
 def generate_image(sensor_data):
     """Generate the energy price bar chart."""
     td = sensor_data.get('net_prices_today', [])
@@ -84,18 +91,28 @@ def generate_image(sensor_data):
     win_start = now - timedelta(hours=4)
     win_end = now + timedelta(hours=20)
 
-    visible = []
+    normalized = []
     for item in all_prices:
-        start = datetime.fromisoformat(item['start'].replace('Z', '+00:00'))
-        # If no timezone info, assume already Amsterdam local time
-        if start.tzinfo is None:
-            start = start.replace(tzinfo=local_tz)
-        start_local = start.astimezone(local_tz)
+        start_local = parse_local_timestamp(item['start'], local_tz)
+        end_raw = item.get('end')
+        end_local = parse_local_timestamp(end_raw, local_tz) if end_raw else None
+        normalized.append({
+            'start': start_local,
+            'end': end_local,
+            'value': item['value']
+        })
+
+    normalized.sort(key=lambda item: item['start'])
+
+    for idx, item in enumerate(normalized):
+        if item['end'] is None and idx + 1 < len(normalized):
+            item['end'] = normalized[idx + 1]['start']
+
+    visible = []
+    for item in normalized:
+        start_local = item['start']
         if win_start <= start_local <= win_end:
-            visible.append({
-                'start': start_local,
-                'value': item['value']
-            })
+            visible.append(item)
 
     if not visible:
         img = Image.new('RGB', (WIDTH, HEIGHT), COLOR_BG)
@@ -155,7 +172,10 @@ def generate_image(sensor_data):
         seg_width_px = seg_right_px - seg_left_px
 
         start_h = visible[seg['start']]['start'].hour
-        end_h = (visible[seg['end']]['start'] + timedelta(hours=1)).hour
+        seg_end = visible[seg['end']].get('end')
+        if seg_end is None:
+            seg_end = visible[seg['end']]['start'] + timedelta(hours=1)
+        end_h = seg_end.hour
         label = f"{start_h}-{end_h}"
 
         f = get_font(21)
